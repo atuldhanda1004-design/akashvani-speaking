@@ -28,7 +28,7 @@ export default function Header() {
             <Mic className="text-red-600" size={28} />
             <div>
               <h1 className="text-xl font-black text-gray-900 leading-tight">
-                अक्षरवाणी <span className="text-red-600">स्पीकिंग</span>
+                आकाशवाणी <span className="text-red-600">स्पीकिंग</span>
               </h1>
               <p className="text-[10px] text-gray-500 -mt-1">सच बोलने की आवाज़</p>
             </div>

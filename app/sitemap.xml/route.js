@@ -42,7 +42,7 @@ export async function GET() {
     <priority>0.8</priority>
     <news:news>
       <news:publication>
-        <news:name>अक्षरवाणी स्पीकिंग</news:name>
+        <news:name>आकाशवाणी स्पीकिंग</news:name>
         <news:language>hi</news:language>
       </news:publication>
       <news:publication_date>${n.updated_at || new Date().toISOString()}</news:publication_date>

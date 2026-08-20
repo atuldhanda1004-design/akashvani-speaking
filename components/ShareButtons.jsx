@@ -6,7 +6,7 @@ export default function ShareButtons({ headline, url }) {
   const [copied, setCopied] = useState(false);
   const shareUrl = typeof window !== 'undefined' ? (url || window.location.href) : '';
   const encodedUrl = encodeURIComponent(shareUrl);
-  const encodedText = encodeURIComponent(headline || 'अक्षरवाणी स्पीकिंग न्यूज़');
+  const encodedText = encodeURIComponent(headline || 'आकाशवाणी स्पीकिंग न्यूज़');
 
   const handleCopy = () => {
     if (typeof navigator !== 'undefined') {

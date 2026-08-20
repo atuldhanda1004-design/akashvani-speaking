@@ -4,11 +4,11 @@ import Footer from '@/components/Footer';
 import BreakingTicker from '@/components/BreakingTicker';
 
 export const metadata = {
-  title: 'अक्षरवाणी स्पीकिंग | Akashvani Speaking - सच बोलने की आवाज़',
-  description: 'हरियाणा और भारत की ताज़ा खबरें, ट्रेंडिंग न्यूज़, वीडियो और रील्स - अक्षरवाणी स्पीकिंग पर पढ़ें सबसे पहले',
-  keywords: 'Hindi News, Haryana News, Breaking News, Trending News, Akashvani Speaking, अक्षरवाणी',
+  title: 'आकाशवाणी स्पीकिंग | Akashvani Speaking - सच बोलने की आवाज़',
+  description: 'हरियाणा और भारत की ताज़ा खबरें, ट्रेंडिंग न्यूज़, वीडियो और रील्स - आकाशवाणी स्पीकिंग पर पढ़ें सबसे पहले',
+  keywords: 'Hindi News, Haryana News, Breaking News, Trending News, Akashvani Speaking, आकाशवाणी',
   openGraph: {
-    title: 'अक्षरवाणी स्पीकिंग',
+    title: 'आकाशवाणी स्पीकिंग',
     description: 'सच बोलने की आवाज़ - हरियाणा और भारत की ताज़ा खबरें',
     url: 'https://akashvanispeaking.news',
     siteName: 'Akashvani Speaking',
@@ -35,7 +35,7 @@ export const metadata = {
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'NewsMediaOrganization',
-  name: 'अक्षरवाणी स्पीकिंग',
+  name: 'आकाशवाणी स्पीकिंग',
   alternateName: 'Akashvani Speaking',
   url: 'https://akashvanispeaking.news',
   logo: 'https://akashvanispeaking.news/logo.png',

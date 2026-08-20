@@ -8,7 +8,7 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <h3 className="text-xl font-black text-white mb-2">
-              अक्षरवाणी <span className="text-red-500">स्पीकिंग</span>
+              आकाशवाणी <span className="text-red-500">स्पीकिंग</span>
             </h3>
             <p className="text-sm text-gray-400">सच बोलने की आवाज़</p>
             <p className="text-sm text-gray-400 mt-2">हरियाणा और भारत की सबसे भरोसेमंद हिंदी न्यूज़ वेबसाइट</p>
@@ -52,7 +52,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-6 text-center text-sm text-gray-500">
-          © {new Date().getFullYear()} अक्षरवाणी स्पीकिंग | akashvanispeaking.news | सर्वाधिकार सुरक्षित
+          © {new Date().getFullYear()} आकाशवाणी स्पीकिंग | akashvanispeaking.news | सर्वाधिकार सुरक्षित
         </div>
       </div>
     </footer>

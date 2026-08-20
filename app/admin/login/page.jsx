@@ -45,7 +45,7 @@ export default function AdminLogin() {
       <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
         <div className="text-center mb-8">
           <Mic className="mx-auto text-red-600 mb-2" size={40} />
-          <h1 className="text-2xl font-black">अक्षरवाणी <span className="text-red-600">Admin</span></h1>
+          <h1 className="text-2xl font-black">आकाशवाणी <span className="text-red-600">Admin</span></h1>
           <p className="text-gray-500 text-sm">लॉगिन करें</p>
         </div>
 

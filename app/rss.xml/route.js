@@ -16,7 +16,7 @@ export async function GET() {
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 <channel>
-  <title>अक्षरवाणी स्पीकिंग</title>
+  <title>आकाशवाणी स्पीकिंग</title>
   <link>${baseUrl}</link>
   <description>हरियाणा और भारत की ताज़ा खबरें</description>
   <language>hi</language>

@@ -59,7 +59,7 @@ export default function AdminDashboard() {
       {/* Admin Header */}
       <header className="bg-gray-900 text-white px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="font-bold text-lg">🎙️ अक्षरवाणी Admin</h1>
+          <h1 className="font-bold text-lg">🎙️ आकाशवाणी Admin</h1>
           <span className="bg-red-600 text-xs px-2 py-1 rounded-full uppercase">{user.role}</span>
         </div>
         <div className="flex items-center gap-4">

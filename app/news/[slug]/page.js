@@ -17,7 +17,7 @@ export async function generateMetadata({ params }) {
   if (!news) return { title: 'Not Found' };
 
   return {
-    title: `${news.meta_title || news.headline} | अक्षरवाणी स्पीकिंग`,
+    title: `${news.meta_title || news.headline} | आकाशवाणी स्पीकिंग`,
     description: news.meta_description || news.points?.slice(0, 2).join(' | '),
     openGraph: {
       title: news.headline,
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }) {
       images: news.featured_image ? [news.featured_image] : [],
       type: 'article',
       publishedTime: news.published_at,
-      authors: ['अक्षरवाणी स्पीकिंग'],
+      authors: ['आकाशवाणी स्पीकिंग'],
       tags: news.tags,
     },
     twitter: {
@@ -64,10 +64,10 @@ export default async function NewsPage({ params }) {
     image: news.featured_image,
     datePublished: news.published_at,
     dateModified: news.updated_at,
-    author: { '@type': 'Person', name: news.users?.full_name || 'अक्षरवाणी टीम' },
+    author: { '@type': 'Person', name: news.users?.full_name || 'आकाशवाणी टीम' },
     publisher: {
       '@type': 'Organization',
-      name: 'अक्षरवाणी स्पीकिंग',
+      name: 'आकाशवाणी स्पीकिंग',
       logo: { '@type': 'ImageObject', url: `${siteUrl}/logo.png` },
     },
     mainEntityOfPage: `${siteUrl}/news/${news.slug}`,
@@ -104,7 +104,7 @@ export default async function NewsPage({ params }) {
         {/* Meta Info */}
         <div className="flex items-center gap-4 text-sm text-gray-500 mb-6 pb-4 border-b flex-wrap">
           <span className="flex items-center gap-1">
-            <User size={14} /> {news.users?.full_name || 'अक्षरवाणी टीम'}
+            <User size={14} /> {news.users?.full_name || 'आकाशवाणी टीम'}
           </span>
           <span className="flex items-center gap-1">
             <Clock size={14} /> {formatDate(news.published_at)}
