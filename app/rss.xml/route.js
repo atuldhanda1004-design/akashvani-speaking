@@ -1,0 +1,39 @@
+import { supabase } from '@/lib/supabase';
+
+export async function GET() {
+  const { data: news } = await supabase
+    .from('news')
+    .select('*, categories(name)')
+    .eq('status', 'approved')
+    .order('published_at', { ascending: false })
+    .limit(50);
+
+  const baseUrl = 'https://akashvanispeaking.news';
+
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title>अक्षरवाणी स्पीकिंग</title>
+  <link>${baseUrl}</link>
+  <description>हरियाणा और भारत की ताज़ा खबरें</description>
+  <language>hi</language>
+  <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml"/>`;
+
+  news?.forEach(n => {
+    xml += `
+  <item>
+    <title><![CDATA[${n.headline}]]></title>
+    <link>${baseUrl}/news/${n.slug}</link>
+    <description><![CDATA[${n.points?.join('. ')}]]></description>
+    <pubDate>${new Date(n.published_at).toUTCString()}</pubDate>
+    <category>${n.categories?.name || 'News'}</category>
+    <guid>${baseUrl}/news/${n.slug}</guid>
+  </item>`;
+  });
+
+  xml += '\n</channel>\n</rss>';
+
+  return new Response(xml, {
+    headers: { 'Content-Type': 'application/xml' },
+  });
+}
