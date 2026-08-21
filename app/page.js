@@ -42,6 +42,30 @@ export default async function HomePage() {
 
   return (
     <>
+      <script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'NewsMediaOrganization',
+      name: 'Akashvani Speaking',
+      url: 'https://akashvanispeaking.news',
+      logo: 'https://akashvanispeaking.news/logo.png',
+      sameAs: [
+        'https://www.youtube.com/@akashvanispeaking',
+        'https://www.instagram.com/akashvanispeaking',
+        'https://www.facebook.com/akashvanispeaking',
+        'https://x.com/AkashvaniSpeak',
+      ],
+      foundingDate: '2024',
+      address: {
+        '@type': 'PostalAddress',
+        addressRegion: 'Haryana',
+        addressCountry: 'IN',
+      },
+    }),
+  }}
+/>
       <Header />
       <LiveTicker updates={live} />
 

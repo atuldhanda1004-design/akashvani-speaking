@@ -1,4 +1,5 @@
 import './globals.css'
+import Script from 'next/script'
 import { SITE_CONFIG } from '@/lib/constants'
 
 export const metadata = {
@@ -12,6 +13,18 @@ export const metadata = {
   authors: [{ name: SITE_CONFIG.name }],
   creator: SITE_CONFIG.developer.name,
   publisher: SITE_CONFIG.name,
+  alternates: {
+    canonical: SITE_CONFIG.url,
+    types: {
+      'application/rss+xml': `${SITE_CONFIG.url}/rss.xml`,
+    },
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || 'YOUR_GOOGLE_SITE_VERIFICATION_CODE',
+  },
+  other: {
+    'google-adsense-account': process.env.NEXT_PUBLIC_ADSENSE_ID || 'ca-pub-XXXXXXXXXXXXXXXX',
+  },
   openGraph: {
     title: `${SITE_CONFIG.name} | ${SITE_CONFIG.tagline}`,
     description: SITE_CONFIG.description,
@@ -40,8 +53,19 @@ export const viewport = {
 }
 
 export default function RootLayout({ children }) {
+  const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_ID || 'ca-pub-XXXXXXXXXXXXXXXX'
+
   return (
     <html lang="hi">
+      <head>
+        {/* Google AdSense Auto Ads Script */}
+        <Script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseId}`}
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+      </head>
       <body className="min-h-screen flex flex-col">
         {children}
       </body>

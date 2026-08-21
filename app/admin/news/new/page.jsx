@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Plus, X, Upload, Trash2, Send } from 'lucide-react'
 import { dummyCategories } from '@/lib/dummyData'
 import { createNews, uploadImage, getCategories, getCurrentUser, isSupabaseConfigured } from '@/lib/supabase'
+import { pingGoogleSitemap } from '@/lib/googleIndex'
 
 function slugify(text) {
   return text
@@ -92,6 +93,7 @@ export default function AddNewsPage() {
         }
 
         await createNews(payload)
+        await pingGoogleSitemap()
       } else {
         // Demo
         await new Promise((r) => setTimeout(r, 1500))

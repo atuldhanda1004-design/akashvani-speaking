@@ -1,214 +1,249 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Save, Trash2, Plus, X } from 'lucide-react';
+'use client'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { ArrowLeft, Plus, X, Upload, Trash2, Save } from 'lucide-react'
+import { dummyCategories } from '@/lib/dummyData'
+import { supabase, uploadImage, getCategories, getCurrentUser, isSupabaseConfigured } from '@/lib/supabase'
 
-export default function EditNews() {
-  const [news, setNews] = useState(null);
-  const [user, setUser] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const router = useRouter();
-  const params = useParams();
+export default function EditNewsPage({ params }) {
+  const router = useRouter()
+  const { id } = params
+  
+  const [categories, setCategories] = useState(dummyCategories)
+  const [formData, setFormData] = useState({
+    headline: '', subheadline: '', category_id: '',
+    points: [''], location: '', is_trending: false, is_breaking: false,
+    video_url: '', video_type: 'youtube',
+  })
+  
+  const [featuredImage, setFeaturedImage] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push('/admin/login'); return; }
-      setUser(user);
-
-      const { data: uData } = await supabase
-        .from('users').select('role').eq('id', user.id).single();
-
-      const { data: newsData } = await supabase
-        .from('news').select('*').eq('id', params.id).single();
-
-      // Reporter sirf apni news edit kar sakta hai
-      if (uData?.role === 'reporter' && newsData?.reporter_id !== user.id) {
-        alert('आप सिर्फ अपनी खबरें edit कर सकते हैं');
+    async function fetchNews() {
+      if (!isSupabaseConfigured()) {
+        alert('डेटाबेस कनेक्ट नहीं है!');
         router.push('/admin/dashboard');
         return;
       }
 
-      setNews(newsData);
+      const user = await getCurrentUser()
+      if (!user) { router.push('/admin/login'); return }
 
-      const { data: cats } = await supabase
-        .from('categories').select('*').eq('is_active', true).order('priority');
-      setCategories(cats || []);
-    };
-    init();
-  }, [params.id]);
+      const cats = await getCategories()
+      if (cats?.length) setCategories(cats)
 
-  const handleSave = async () => {
-    if (!news) return;
-    setSaving(true);
+      // Fetch existing news data
+      const { data: newsItem, error } = await supabase
+        .from('news')
+        .select('*')
+        .eq('id', id)
+        .single()
 
-    const validPoints = news.points.filter(p => p.trim());
-    const { error } = await supabase
-      .from('news')
-      .update({
-        headline: news.headline,
-        subheadline: news.subheadline,
-        points: validPoints,
-        category_id: news.category_id,
-        is_trending: news.is_trending,
-        is_breaking: news.is_breaking,
-        tags: news.tags,
-        meta_title: news.meta_title,
-        meta_description: news.meta_description,
-        updated_at: new Date().toISOString(),
+      if (error || !newsItem) {
+        alert('खबर नहीं मिली!')
+        router.push('/admin/dashboard')
+        return
+      }
+
+      // Populate form
+      setFormData({
+        headline: newsItem.headline || '',
+        subheadline: newsItem.subheadline || '',
+        category_id: newsItem.category_id || '',
+        points: newsItem.points?.length ? newsItem.points : [''],
+        location: newsItem.location || '',
+        is_trending: newsItem.is_trending || false,
+        is_breaking: newsItem.is_breaking || false,
+        video_url: newsItem.video_url || '',
+        video_type: newsItem.video_type || 'youtube',
       })
-      .eq('id', params.id);
-
-    setSaving(false);
-    if (error) alert('Error: ' + error.message);
-    else {
-      alert('✅ खबर अपडेट हो गई!');
-      router.push('/admin/dashboard');
+      setImagePreview(newsItem.featured_image)
+      setIsLoading(false)
     }
-  };
 
-  const handleDelete = async () => {
-    if (!confirm('क्या आप सच में ये खबर डिलीट करना चाहते हैं?')) return;
-    await supabase.from('news').delete().eq('id', params.id);
-    alert('🗑️ खबर डिलीट हो गई!');
-    router.push('/admin/dashboard');
-  };
+    fetchNews()
+  }, [id, router])
 
-  const addPoint = () => setNews({ ...news, points: [...news.points, ''] });
-  const removePoint = (i) => setNews({ ...news, points: news.points.filter((_, idx) => idx !== i) });
-  const updatePoint = (i, val) => {
-    const pts = [...news.points];
-    pts[i] = val;
-    setNews({ ...news, points: pts });
-  };
+  const addPoint = () => setFormData((p) => ({ ...p, points: [...p.points, ''] }))
+  const removePoint = (i) => setFormData((p) => ({ ...p, points: p.points.filter((_, idx) => idx !== i) }))
+  const updatePoint = (i, v) => setFormData((p) => ({ ...p, points: p.points.map((pt, idx) => idx === i ? v : pt) }))
 
-  if (!news) return <div className="p-8 text-center">लोड हो रहा है...</div>;
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setFeaturedImage(file)
+    const reader = new FileReader()
+    reader.onload = (ev) => setImagePreview(ev.target.result)
+    reader.readAsDataURL(file)
+  }
+
+  const handleUpdate = async (e) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    try {
+      const filteredPoints = formData.points.filter((p) => p.trim())
+      
+      let imageUrl = imagePreview
+      // If a new image is selected, upload it
+      if (featuredImage) {
+        imageUrl = await uploadImage(featuredImage)
+      }
+
+      const payload = {
+        headline: formData.headline,
+        subheadline: formData.subheadline || null,
+        points: filteredPoints,
+        category_id: parseInt(formData.category_id) || null,
+        featured_image: imageUrl,
+        location: formData.location || null,
+        is_trending: formData.is_trending,
+        is_breaking: formData.is_breaking,
+        video_url: formData.video_url || null,
+        video_type: formData.video_url ? formData.video_type : null,
+      }
+
+      const { error } = await supabase
+        .from('news')
+        .update(payload)
+        .eq('id', id)
+
+      if (error) throw error
+
+      alert('✅ खबर सफलतापूर्वक अपडेट हो गई!')
+      router.push('/admin/dashboard')
+    } catch (err) {
+      console.error(err)
+      alert(err.message || 'अपडेट करने में त्रुटि हुई')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (isLoading) return <div className="p-10 text-center text-brand-navy">लोड हो रहा है...</div>
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-gray-900 text-white px-6 py-4 flex items-center gap-4">
-        <button onClick={() => router.back()} className="hover:bg-gray-700 p-2 rounded-lg">
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="font-bold text-lg">✏️ खबर Edit करें</h1>
-        <span className={`ml-auto text-xs px-2 py-1 rounded-full font-bold ${
-          news.status === 'approved' ? 'bg-green-600' :
-          news.status === 'pending' ? 'bg-yellow-600' : 'bg-red-600'
-        }`}>
-          {news.status === 'approved' ? '✅ प्रकाशित' :
-           news.status === 'pending' ? '⏳ पेंडिंग' : '❌ Rejected'}
-        </span>
+    <div className="min-h-screen bg-brand-lightGray">
+      <header className="bg-brand-navy text-white shadow-lg">
+        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+          <Link href="/admin/dashboard" className="flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm font-poppins">
+            <ArrowLeft className="w-4 h-4" />डैशबोर्ड
+          </Link>
+          <h1 className="font-poppins font-bold text-sm">खबर एडिट करें</h1>
+          <div className="w-20" />
+        </div>
       </header>
 
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-white rounded-2xl shadow-sm border p-6 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 py-6">
+        <form onSubmit={handleUpdate} className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <label className="block text-sm font-poppins font-semibold text-gray-700 mb-2">हेडलाइन *</label>
+                <input
+                  type="text" value={formData.headline}
+                  onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
+                  required
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl font-yantramanav text-lg outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20"
+                />
+              </div>
 
-          {/* Category */}
-          <div>
-            <label className="block text-sm font-bold mb-2">📂 श्रेणी</label>
-            <select
-              value={news.category_id || ''}
-              onChange={(e) => setNews({ ...news, category_id: parseInt(e.target.value) })}
-              className="w-full border rounded-xl px-4 py-3 text-sm"
-            >
-              <option value="">-- चुनें --</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
-              ))}
-            </select>
-          </div>
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <label className="block text-sm font-poppins font-semibold text-gray-700 mb-2">सब-हेडलाइन</label>
+                <textarea
+                  value={formData.subheadline}
+                  onChange={(e) => setFormData({ ...formData, subheadline: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl font-yantramanav outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20 resize-none"
+                />
+              </div>
 
-          {/* Headline */}
-          <div>
-            <label className="block text-sm font-bold mb-2">📰 हेडलाइन</label>
-            <input
-              type="text"
-              value={news.headline}
-              onChange={(e) => setNews({ ...news, headline: e.target.value })}
-              className="w-full border rounded-xl px-4 py-3 text-lg font-bold"
-            />
-          </div>
-
-          {/* Points */}
-          <div>
-            <label className="block text-sm font-bold mb-2">📌 बिंदु (Points)</label>
-            <div className="space-y-3">
-              {news.points.map((point, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  <span className="bg-red-600 text-white text-xs font-bold w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-2">
-                    {i + 1}
-                  </span>
-                  <textarea
-                    value={point}
-                    onChange={(e) => updatePoint(i, e.target.value)}
-                    rows={2}
-                    className="flex-1 border rounded-xl px-4 py-2 text-sm resize-none"
-                  />
-                  <button onClick={() => removePoint(i)} className="text-red-400 p-2 mt-1">
-                    <X size={18} />
-                  </button>
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <label className="block text-sm font-poppins font-semibold text-gray-700 mb-3">मुख्य बिंदु (Points)</label>
+                <div className="space-y-3">
+                  {formData.points.map((point, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="w-6 h-6 bg-brand-navy/10 text-brand-navy rounded-full flex items-center justify-center text-xs font-poppins font-bold shrink-0">{idx + 1}</span>
+                      <input
+                        type="text" value={point}
+                        onChange={(e) => updatePoint(idx, e.target.value)}
+                        className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl font-yantramanav text-sm outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20"
+                      />
+                      {formData.points.length > 1 && (
+                        <button type="button" onClick={() => removePoint(idx)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
+                <button type="button" onClick={addPoint} className="mt-3 flex items-center gap-2 text-brand-navy text-sm font-poppins font-medium hover:underline">
+                  <Plus className="w-4 h-4" />और बिंदु जोड़ें
+                </button>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <label className="block text-sm font-poppins font-semibold text-gray-700 mb-3">फीचर्ड इमेज (नया चुनेंगे तो पुरानी हट जाएगी)</label>
+                {imagePreview ? (
+                  <div className="relative rounded-xl overflow-hidden">
+                    <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover" />
+                    <button type="button" onClick={() => { setFeaturedImage(null); setImagePreview(null) }} className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-brand-navy/30 hover:bg-brand-navy/5">
+                    <Upload className="w-8 h-8 text-gray-300 mb-2" />
+                    <span className="text-sm text-gray-400 font-poppins">नई फोटो चुनें (ऑप्शनल)</span>
+                    <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                  </label>
+                )}
+              </div>
             </div>
-            <button onClick={addPoint} className="mt-3 text-red-600 text-sm font-bold flex items-center gap-1">
-              <Plus size={16} /> Point जोड़ें
-            </button>
-          </div>
 
-          {/* Toggles */}
-          <div className="flex gap-6">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={news.is_trending}
-                onChange={(e) => setNews({ ...news, is_trending: e.target.checked })}
-                className="w-5 h-5 text-red-600 rounded"
-              />
-              <span className="font-bold text-sm">🔥 ट्रेंडिंग</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={news.is_breaking}
-                onChange={(e) => setNews({ ...news, is_breaking: e.target.checked })}
-                className="w-5 h-5 text-red-600 rounded"
-              />
-              <span className="font-bold text-sm">🔴 ब्रेकिंग</span>
-            </label>
-          </div>
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <label className="block text-sm font-poppins font-semibold text-gray-700 mb-2">कैटेगरी *</label>
+                <select
+                  value={formData.category_id}
+                  onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                  required
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl font-yantramanav text-sm outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20 bg-white"
+                >
+                  <option value="">कैटेगरी चुनें</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
+                  ))}
+                </select>
+              </div>
 
-          {/* Tags */}
-          <div>
-            <label className="block text-sm font-bold mb-2">🏷️ Tags</label>
-            <input
-              type="text"
-              value={news.tags?.join(', ') || ''}
-              onChange={(e) => setNews({ ...news, tags: e.target.value.split(',').map(t => t.trim()) })}
-              className="w-full border rounded-xl px-4 py-3 text-sm"
-            />
-          </div>
+              <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
+                {[
+                  { key: 'is_trending', label: 'ट्रेंडिंग न्यूज़', color: 'text-brand-navy' },
+                  { key: 'is_breaking', label: 'ब्रेकिंग / लाइव', color: 'text-brand-red' },
+                ].map((f) => (
+                  <label key={f.key} className="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" checked={formData[f.key]}
+                      onChange={(e) => setFormData({ ...formData, [f.key]: e.target.checked })}
+                      className="w-5 h-5 rounded border-gray-300 text-brand-navy focus:ring-brand-navy" />
+                    <span className={`text-sm font-poppins font-medium text-gray-700 group-hover:${f.color} transition-colors`}>{f.label}</span>
+                  </label>
+                ))}
+              </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4 border-t">
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"
-            >
-              <Save size={18} /> {saving ? 'सेव हो रहा है...' : '💾 सेव करें'}
-            </button>
-            <button
-              onClick={handleDelete}
-              className="bg-red-100 hover:bg-red-200 text-red-600 px-6 py-3 rounded-xl font-bold flex items-center gap-2"
-            >
-              <Trash2 size={18} /> डिलीट
-            </button>
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <button type="submit" disabled={isSubmitting} className="w-full py-3 bg-brand-navy text-white rounded-xl font-poppins font-semibold text-sm flex items-center justify-center gap-2 hover:bg-brand-navyDark transition-all disabled:opacity-50">
+                  {isSubmitting ? 'अपडेट हो रहा है...' : <><Save className="w-4 h-4" /><span>सेव करें (Update)</span></>}
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        </form>
       </div>
     </div>
-  );
+  )
 }

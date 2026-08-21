@@ -10,6 +10,7 @@ import ScrollToTop from '@/components/ScrollToTop'
 import { getNewsBySlug } from '@/lib/supabase'
 import { dummyTrendingNews, dummyLatestNews, formatDate, formatTime, timeAgo } from '@/lib/dummyData'
 import { SITE_CONFIG } from '@/lib/constants'
+import NewsJsonLd from '@/components/NewsJsonLd'
 
 export const revalidate = 60
 
@@ -52,7 +53,7 @@ export default async function NewsDetailPage({ params }) {
   return (
     <>
       <Header />
-
+<NewsJsonLd news={news} />
       <main className="max-w-4xl mx-auto px-4 py-6">
         <Link href="/" className="inline-flex items-center gap-2 text-brand-navy font-poppins text-sm font-medium hover:underline mb-4 group">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
