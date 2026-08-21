@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 
 function timeAgo(dateStr) {
   if (!dateStr) return 'अभी-अभी';
@@ -13,25 +13,11 @@ function timeAgo(dateStr) {
 export default function LiveUpdates({ news = [] }) {
   const scrollRef = useRef(null);
 
-  // Auto scroll effect
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const interval = setInterval(() => {
-      if (el.scrollLeft <= -(el.scrollWidth - el.clientWidth)) {
-        el.scrollLeft = 0;
-      } else {
-        el.scrollLeft -= 320;
-      }
-    }, 3500);
-    return () => clearInterval(interval);
-  }, []);
-
   if (!news || news.length === 0) return null;
 
   return (
-    <section id="live" className="max-w-7xl mx-auto px-4 mt-6">
-      {/* Section Header */}
+    <section id="live" className="mt-6 mb-8">
+      {/* Section Title */}
       <div className="flex items-center gap-2 mb-4">
         <span className="w-2.5 h-2.5 bg-red-600 rounded-full pulse-dot"></span>
         <h2 className="text-xl font-black text-gray-900 tracking-tight">LIVE UPDATES</h2>
@@ -40,7 +26,7 @@ export default function LiveUpdates({ news = [] }) {
         </span>
       </div>
 
-      {/* RTL Swipe Container */}
+      {/* Horizontal Scroll Cards (RTL Drag/Swipe) */}
       <div
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto no-scrollbar scroll-smooth pb-3"
@@ -48,15 +34,15 @@ export default function LiveUpdates({ news = [] }) {
       >
         {news.map((item) => (
           <a
-            key={item.id}
+            key={item.id || item.slug}
             href={`/news/${item.slug}`}
-            className="min-w-[280px] sm:min-w-[320px] max-w-[320px] bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-xl transition group shrink-0"
+            className="min-w-[280px] sm:min-w-[320px] max-w-[320px] bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-xl transition group shrink-0 block"
             dir="ltr"
           >
             {/* Image */}
             <div className="h-44 overflow-hidden bg-gray-100 relative">
               <img
-                src={item.featured_image || 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=600'}
+                src={item.featured_image}
                 alt={item.headline}
                 className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
               />
@@ -71,7 +57,7 @@ export default function LiveUpdates({ news = [] }) {
             <div className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded">
-                  {item.categories?.name || 'ताज़ा खबर'}
+                  {item.category || (item.categories && item.categories.name) || 'ताज़ा खबर'}
                 </span>
                 <span className="text-[11px] text-gray-400 font-medium">
                   {timeAgo(item.published_at)}
