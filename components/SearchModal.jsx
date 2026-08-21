@@ -1,6 +1,5 @@
 'use client'
-
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Search, X, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { dummyLatestNews, dummyTrendingNews } from '@/lib/dummyData'
@@ -19,18 +18,17 @@ export default function SearchModal({ isOpen, onClose }) {
       setQuery('')
       setResults([])
     }
-    return () => {
-      document.body.style.overflow = ''
-    }
+    return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
   useEffect(() => {
     if (query.length > 1) {
       const allNews = [...dummyTrendingNews, ...dummyLatestNews]
+      const q = query.toLowerCase()
       const filtered = allNews.filter(
         (n) =>
-          n.headline.toLowerCase().includes(query.toLowerCase()) ||
-          n.subheadline?.toLowerCase().includes(query.toLowerCase())
+          n.headline.toLowerCase().includes(q) ||
+          n.subheadline?.toLowerCase().includes(q)
       )
       setResults(filtered)
     } else {
@@ -41,9 +39,8 @@ export default function SearchModal({ isOpen, onClose }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-md animate-fade-in">
-      <div className="max-w-2xl mx-auto pt-20 px-4">
-        {/* Search Input */}
+    <div className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-md animate-fade-in" onClick={onClose}>
+      <div className="max-w-2xl mx-auto pt-20 px-4" onClick={(e) => e.stopPropagation()}>
         <div className="relative animate-slide-down">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
@@ -62,16 +59,14 @@ export default function SearchModal({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Results */}
         {results.length > 0 && (
           <div className="mt-4 bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[60vh] overflow-y-auto animate-slide-up">
-            {results.map((item, index) => (
+            {results.map((item) => (
               <Link
                 key={item.id}
                 href={`/news/${item.slug}`}
                 onClick={onClose}
                 className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0 group"
-                style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div className="flex-1">
                   <p className="font-yantramanav font-bold text-gray-900 line-clamp-2 group-hover:text-brand-navy transition-colors">

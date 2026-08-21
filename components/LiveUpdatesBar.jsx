@@ -1,6 +1,5 @@
 'use client'
-
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { LiveUpdateSkeleton } from './SkeletonLoader'
@@ -11,7 +10,7 @@ export default function LiveUpdatesBar({ updates = [] }) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800)
+    const timer = setTimeout(() => setIsLoading(false), 700)
     return () => clearTimeout(timer)
   }, [])
 
@@ -31,9 +30,7 @@ export default function LiveUpdatesBar({ updates = [] }) {
           <div>
             <div className="h-6 bg-gray-200 rounded w-40 mb-4 animate-pulse" />
             <div className="space-y-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-12 bg-gray-200 rounded-xl animate-pulse" />
-              ))}
+              {[1, 2, 3, 4].map((i) => <div key={i} className="h-12 bg-gray-200 rounded-xl animate-pulse" />)}
             </div>
           </div>
         </div>
@@ -44,7 +41,6 @@ export default function LiveUpdatesBar({ updates = [] }) {
   return (
     <section className="mb-10">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Live Updates */}
         <div className="lg:col-span-2">
           <div className="flex items-center gap-2 mb-5">
             <h2 className="section-title">Live Updates</h2>
@@ -56,7 +52,7 @@ export default function LiveUpdatesBar({ updates = [] }) {
               <Link
                 key={update.id}
                 href={`/news/${update.slug}`}
-                className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 hover:border-brand-navy/20 hover:shadow-md transition-all duration-300 group animate-fade-in-up"
+                className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 hover:border-brand-navy/20 hover:shadow-md transition-all group animate-fade-in-up"
                 style={{ animationDelay: `${idx * 80}ms` }}
               >
                 <span className="bg-brand-navy text-white text-xs font-poppins font-bold px-3 py-2 rounded-lg flex-shrink-0 min-w-[80px] text-center">
@@ -75,19 +71,14 @@ export default function LiveUpdatesBar({ updates = [] }) {
           {updates.length > 3 && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="flex items-center gap-1 mx-auto mt-4 text-sm text-brand-navy font-poppins font-semibold hover:underline transition-all"
+              className="flex items-center gap-1 mx-auto mt-4 text-sm text-brand-navy font-poppins font-semibold hover:underline"
             >
               {isExpanded ? 'कम दिखाएं' : 'और लाइव अपडेट देखें'}
-              <ChevronDown
-                className={`w-4 h-4 transition-transform duration-300 ${
-                  isExpanded ? 'rotate-180' : ''
-                }`}
-              />
+              <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
             </button>
           )}
         </div>
 
-        {/* Popular Categories */}
         <div>
           <h2 className="section-title mb-5">Popular Categories</h2>
           <div className="space-y-2">
@@ -95,7 +86,7 @@ export default function LiveUpdatesBar({ updates = [] }) {
               <Link
                 key={cat.id}
                 href={`/category/${cat.slug}`}
-                className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 hover:border-brand-navy/20 hover:shadow-md transition-all duration-300 group animate-fade-in-up"
+                className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 hover:border-brand-navy/20 hover:shadow-md transition-all group animate-fade-in-up"
                 style={{ animationDelay: `${idx * 60}ms` }}
               >
                 <span className="text-xl">{cat.icon}</span>

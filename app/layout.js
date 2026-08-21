@@ -1,30 +1,35 @@
 import './globals.css'
+import { SITE_CONFIG } from '@/lib/constants'
 
 export const metadata = {
-  title: 'Akashvani Speaking | ईमानदार सोच - सच्ची खबरें',
-  description: 'हरियाणा की सबसे तेज़ और विश्वसनीय हिंदी न्यूज़ पोर्टल। ताज़ा खबरें, लाइव अपडेट, ट्रेंडिंग न्यूज़ - पॉइंट टू पॉइंट।',
-  keywords: 'Akashvani Speaking, हरियाणा न्यूज़, Hindi News, Haryana Latest News, Breaking News, Live Updates',
-  authors: [{ name: 'Akashvani Speaking' }],
-  creator: 'Revonic Private Limited',
-  publisher: 'Akashvani Speaking',
+  metadataBase: new URL(SITE_CONFIG.url),
+  title: {
+    default: `${SITE_CONFIG.name} | ${SITE_CONFIG.tagline}`,
+    template: `%s | ${SITE_CONFIG.name}`,
+  },
+  description: SITE_CONFIG.description,
+  keywords: SITE_CONFIG.keywords,
+  authors: [{ name: SITE_CONFIG.name }],
+  creator: SITE_CONFIG.developer.name,
+  publisher: SITE_CONFIG.name,
   openGraph: {
-    title: 'Akashvani Speaking | ईमानदार सोच - सच्ची खबरें',
-    description: 'हरियाणा की सबसे तेज़ और विश्वसनीय हिंदी न्यूज़ पोर्टल।',
-    url: 'https://akashvanispeaking.news',
-    siteName: 'Akashvani Speaking',
+    title: `${SITE_CONFIG.name} | ${SITE_CONFIG.tagline}`,
+    description: SITE_CONFIG.description,
+    url: SITE_CONFIG.url,
+    siteName: SITE_CONFIG.name,
     locale: 'hi_IN',
     type: 'website',
+    images: [{ url: SITE_CONFIG.ogImage, width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Akashvani Speaking',
-    description: 'हरियाणा की सबसे तेज़ और विश्वसनीय हिंदी न्यूज़ पोर्टल।',
+    title: SITE_CONFIG.name,
+    description: SITE_CONFIG.description,
+    images: [SITE_CONFIG.ogImage],
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
-  metadataBase: new URL('https://akashvanispeaking.news'),
+  robots: { index: true, follow: true },
+  icons: { icon: '/favicon.ico', apple: '/logo.png' },
+  manifest: '/manifest.json',
 }
 
 export const viewport = {
@@ -37,16 +42,6 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="hi">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Yantramanav:wght@300;400;500;700;900&display=swap"
-          rel="stylesheet"
-        />
-        <link rel="icon" href="/favicon.ico" />
-        <meta name="google-adsense-account" content="ca-pub-XXXXXXXXXXXXXXXX" />
-      </head>
       <body className="min-h-screen flex flex-col">
         {children}
       </body>

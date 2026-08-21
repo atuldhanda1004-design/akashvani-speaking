@@ -1,21 +1,14 @@
+import { SITE_CONFIG } from '@/lib/constants'
+
 export async function GET() {
-  const robots = `User-agent: *
+  const content = `User-agent: *
 Allow: /
 Disallow: /admin/
+Disallow: /api/
 
-User-agent: GPTBot
-Allow: /
-
-User-agent: Google-Extended
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
-Sitemap: https://akashvanispeaking.news/sitemap.xml
-`;
-
-  return new Response(robots, {
+Sitemap: ${SITE_CONFIG.url}/sitemap.xml
+`
+  return new Response(content, {
     headers: { 'Content-Type': 'text/plain' },
-  });
+  })
 }

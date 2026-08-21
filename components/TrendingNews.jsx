@@ -1,8 +1,7 @@
 'use client'
-
-import React, { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { ChevronLeft, ChevronRight, Volume2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import ImageWithWatermark from './ImageWithWatermark'
 import { TrendingCardSkeleton } from './SkeletonLoader'
 import { formatDate, timeAgo } from '@/lib/dummyData'
@@ -10,30 +9,25 @@ import { formatDate, timeAgo } from '@/lib/dummyData'
 export default function TrendingNews({ news = [] }) {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
-  const [direction, setDirection] = useState('right')
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1000)
+    const timer = setTimeout(() => setIsLoading(false), 800)
     return () => clearTimeout(timer)
   }, [])
 
-  // Auto-slide
   useEffect(() => {
     if (news.length <= 1) return
     const interval = setInterval(() => {
-      setDirection('right')
       setCurrentSlide((prev) => (prev + 1) % news.length)
-    }, 6000)
+    }, 7000)
     return () => clearInterval(interval)
   }, [news.length])
 
   const goToPrev = useCallback(() => {
-    setDirection('left')
     setCurrentSlide((prev) => (prev - 1 + news.length) % news.length)
   }, [news.length])
 
   const goToNext = useCallback(() => {
-    setDirection('right')
     setCurrentSlide((prev) => (prev + 1) % news.length)
   }, [news.length])
 
@@ -47,7 +41,6 @@ export default function TrendingNews({ news = [] }) {
   }
 
   if (!news.length) return null
-
   const currentNews = news[currentSlide]
 
   return (
@@ -55,13 +48,11 @@ export default function TrendingNews({ news = [] }) {
       <h2 className="section-title mb-6">Trending News</h2>
 
       <div className="relative">
-        {/* Main Card */}
         <div
           key={currentSlide}
-          className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 animate-fade-in`}
+          className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 animate-fade-in"
         >
           <div className="flex flex-col md:flex-row">
-            {/* Image - 45% */}
             <div className="md:w-[45%] relative">
               <ImageWithWatermark
                 src={currentNews.featured_image}
@@ -81,7 +72,6 @@ export default function TrendingNews({ news = [] }) {
               )}
             </div>
 
-            {/* Content - 55% */}
             <div className="md:w-[55%] p-5 md:p-8 flex flex-col justify-between">
               <div>
                 <Link href={`/news/${currentNews.slug}`}>
@@ -92,15 +82,11 @@ export default function TrendingNews({ news = [] }) {
 
                 <div className="w-16 h-1 bg-brand-navy rounded-full mt-3 mb-4" />
 
-                {/* Bullet Points */}
-                {currentNews.points && currentNews.points.length > 0 && (
+                {currentNews.points?.length > 0 && (
                   <ul className="space-y-2 mb-4">
                     {currentNews.points.slice(0, 6).map((point, idx) => (
-                      <li
-                        key={idx}
-                        className="flex items-start gap-2 text-sm md:text-base text-gray-700 font-yantramanav animate-fade-in-up"
-                        style={{ animationDelay: `${idx * 100}ms` }}
-                      >
+                      <li key={idx} className="flex items-start gap-2 text-sm md:text-base text-gray-700 font-yantramanav animate-fade-in-up"
+                          style={{ animationDelay: `${idx * 80}ms` }}>
                         <span className="w-1.5 h-1.5 bg-brand-navy rounded-full mt-2 flex-shrink-0" />
                         <span>{point}</span>
                       </li>
@@ -109,7 +95,6 @@ export default function TrendingNews({ news = [] }) {
                 )}
               </div>
 
-              {/* Footer */}
               <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-brand-navy font-yantramanav font-medium">
@@ -120,18 +105,14 @@ export default function TrendingNews({ news = [] }) {
                     {timeAgo(currentNews.published_at)}
                   </span>
                 </div>
-                <Link
-                  href={`/news/${currentNews.slug}`}
-                  className="btn-navy text-xs md:text-sm"
-                >
+                <Link href={`/news/${currentNews.slug}`} className="btn-navy text-xs md:text-sm">
                   पूरी खबर पढ़ें
                 </Link>
               </div>
             </div>
           </div>
 
-          {/* Live Updates Section (if available) */}
-          {currentNews.live_updates && currentNews.live_updates.length > 0 && (
+          {currentNews.live_updates?.length > 0 && (
             <div className="border-t border-gray-100">
               <div className="bg-brand-red text-white px-5 py-2.5 flex items-center gap-2">
                 <span className="w-3 h-3 bg-white rounded-full animate-pulse-red" />
@@ -140,10 +121,7 @@ export default function TrendingNews({ news = [] }) {
               </div>
               <div className="p-4 space-y-2">
                 {currentNews.live_updates.slice(0, 2).map((update, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100"
-                  >
+                  <div key={idx} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
                     <span className="bg-brand-navy text-white text-xs font-poppins font-bold px-3 py-1.5 rounded-lg flex-shrink-0 min-w-[80px] text-center">
                       {update.time}
                     </span>
@@ -153,63 +131,40 @@ export default function TrendingNews({ news = [] }) {
                     </p>
                   </div>
                 ))}
-                <Link
-                  href={`/news/${currentNews.slug}`}
-                  className="text-brand-navy text-sm font-poppins font-semibold hover:underline flex items-center justify-end gap-1 mt-2"
-                >
-                  Read More
-                  <ChevronRight className="w-4 h-4" />
+                <Link href={`/news/${currentNews.slug}`} className="text-brand-navy text-sm font-poppins font-semibold hover:underline flex items-center justify-end gap-1 mt-2">
+                  Read More <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
             </div>
           )}
         </div>
 
-        {/* Navigation */}
         {news.length > 1 && (
           <>
-            <button
-              onClick={goToPrev}
+            <button onClick={goToPrev}
               className="absolute left-2 top-32 md:top-44 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-sm text-brand-navy rounded-full shadow-lg flex items-center justify-center hover:bg-white hover:scale-110 transition-all active:scale-90 z-10"
-              aria-label="Previous"
-            >
+              aria-label="Previous">
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <button
-              onClick={goToNext}
+            <button onClick={goToNext}
               className="absolute right-2 top-32 md:top-44 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-sm text-brand-navy rounded-full shadow-lg flex items-center justify-center hover:bg-white hover:scale-110 transition-all active:scale-90 z-10"
-              aria-label="Next"
-            >
+              aria-label="Next">
               <ChevronRight className="w-5 h-5" />
             </button>
           </>
         )}
       </div>
 
-      {/* Dots */}
       {news.length > 1 && (
         <div className="flex items-center justify-center gap-2 mt-5">
-          <button onClick={goToPrev} className="text-gray-400 hover:text-brand-navy transition-colors">
-            <ChevronLeft className="w-4 h-4" />
-          </button>
           {news.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => {
-                setDirection(idx > currentSlide ? 'right' : 'left')
-                setCurrentSlide(idx)
-              }}
-              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                idx === currentSlide
-                  ? 'bg-brand-navy w-6'
-                  : 'bg-gray-300 hover:bg-gray-400'
+            <button key={idx} onClick={() => setCurrentSlide(idx)}
+              className={`h-2.5 rounded-full transition-all duration-300 ${
+                idx === currentSlide ? 'bg-brand-navy w-6' : 'bg-gray-300 w-2.5 hover:bg-gray-400'
               }`}
               aria-label={`Slide ${idx + 1}`}
             />
           ))}
-          <button onClick={goToNext} className="text-gray-400 hover:text-brand-navy transition-colors">
-            <ChevronRight className="w-4 h-4" />
-          </button>
         </div>
       )}
     </section>

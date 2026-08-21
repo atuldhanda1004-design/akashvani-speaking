@@ -1,28 +1,25 @@
 'use client'
+import Image from 'next/image'
 
-import React from 'react'
+const SIZES = {
+  sm: 32,
+  md: 44,
+  lg: 64,
+  xl: 80,
+}
 
 export default function Logo({ size = 'md', className = '' }) {
-  const sizes = {
-    sm: { container: 'w-8 h-8', text: 'text-[10px]' },
-    md: { container: 'w-11 h-11', text: 'text-xs' },
-    lg: { container: 'w-16 h-16', text: 'text-base' },
-    xl: { container: 'w-20 h-20', text: 'text-lg' },
-  }
-
-  const s = sizes[size] || sizes.md
-
+  const px = SIZES[size] || SIZES.md
   return (
-    <div className={`relative ${s.container} ${className}`}>
-      {/* Outer circle */}
-      <div className="absolute inset-0 rounded-full border-2 border-white flex items-center justify-center">
-        {/* Inner circle */}
-        <div className="w-[85%] h-[85%] rounded-full border-[1.5px] border-white flex items-center justify-center bg-brand-navy/80">
-          <span className={`font-poppins font-bold text-white ${s.text} tracking-wider`}>
-            A<span className="text-white/80">&</span>S
-          </span>
-        </div>
-      </div>
+    <div className={`relative flex-shrink-0 ${className}`} style={{ width: px, height: px }}>
+      <Image
+        src="/logo.png"
+        alt="Akashvani Speaking Logo"
+        width={px}
+        height={px}
+        priority
+        className="object-contain rounded-full"
+      />
     </div>
   )
 }
@@ -30,12 +27,14 @@ export default function Logo({ size = 'md', className = '' }) {
 export function LogoWatermark({ className = '' }) {
   return (
     <div className={`watermark-overlay ${className}`}>
-      <div className="w-9 h-9 rounded-full border-2 border-white/60 flex items-center justify-center bg-brand-navy/40 backdrop-blur-sm">
-        <div className="w-[80%] h-[80%] rounded-full border border-white/50 flex items-center justify-center">
-          <span className="font-poppins font-bold text-white/70 text-[9px] tracking-wider">
-            AS
-          </span>
-        </div>
+      <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md p-1 border border-white/40 shadow-lg">
+        <Image
+          src="/logo.png"
+          alt="AS Watermark"
+          width={30}
+          height={30}
+          className="object-contain w-full h-full rounded-full opacity-90"
+        />
       </div>
     </div>
   )
