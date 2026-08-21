@@ -1,127 +1,78 @@
 import { supabase } from '@/lib/supabase';
-import { FALLBACK_NEWS } from '@/lib/dummyData';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import ShareButtons from '@/components/ShareButtons';
-import { Clock, Tag, ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
 
-function timeAgo(dateStr) {
-  if (!dateStr) return 'अभी-अभी';
-  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
-  if (diff < 1) return 'अभी-अभी';
-  if (diff < 60) return `${diff} मिनट पहले`;
-  if (diff < 1440) return `${Math.floor(diff / 60)} घंटे पहले`;
-  return `${Math.floor(diff / 1440)} दिन पहले`;
-}
-
-export async function generateMetadata({ params }) {
-  const slug = params.slug;
-  let item = FALLBACK_NEWS.find((n) => n.slug === slug);
-  try {
-    const { data } = await supabase.from('news').select('*').eq('slug', slug).single();
-    if (data) item = data;
-  } catch (e) {}
-
-  return {
-    title: item ? `${item.headline} | Akashvani Speaking` : 'Akashvani Speaking News',
-    description: item?.points?.[0] || 'ताज़ा खबर पढ़ें Akashvani Speaking पर',
-  };
-}
+export const dynamic = 'force-dynamic';
 
 export default async function NewsDetailPage({ params }) {
-  const slug = params.slug;
-  let news = null;
+  const { data: news } = await supabase
+    .from('news')
+    .select('*, categories(name)')
+    .eq('slug', params.slug)
+    .single();
 
-  // 1. Check Supabase
-  try {
-    const { data } = await supabase.from('news').select('*').eq('slug', slug).single();
-    if (data) news = data;
-  } catch (e) {}
+  if (!news) return <div className="p-8 text-center text-xl font-bold">404 - खबर नहीं मिली</div>;
 
-  // 2. Fallback check
-  if (!news) {
-    news = FALLBACK_NEWS.find((n) => n.slug === slug) || FALLBACK_NEWS[0];
-  }
-
-  const categoryName = news.category || (news.categories && news.categories.name) || 'ताज़ा खबर';
+  const formattedDate = new Date(news.published_at).toLocaleDateString('hi-IN', { day: 'numeric', month: 'long' });
+  const formattedTime = new Date(news.published_at).toLocaleTimeString('hi-IN', { hour: '2-digit', minute: '2-digit' });
 
   return (
     <>
       <Header />
-
-      <main className="min-h-screen max-w-4xl mx-auto px-4 py-8">
-        {/* Back button & Category */}
-        <div className="flex items-center justify-between mb-4">
-          <Link href="/" className="inline-flex items-center gap-1.5 text-sm font-bold text-gray-600 hover:text-red-600 transition">
-            <ArrowLeft size={16} /> मुख्य पृष्ठ पर लौटें
-          </Link>
-          <span className="bg-red-50 text-red-600 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">
-            {categoryName}
-          </span>
+      <main className="max-w-3xl mx-auto bg-white min-h-screen shadow-sm border-x border-gray-100 pb-16">
+        
+        {/* Main Image with Location/Time Tag */}
+        <div className="relative">
+          <img src={news.featured_image || 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?w=1000'} alt={news.headline} className="w-full h-auto object-cover max-h-[400px]" />
+          <div className="absolute top-4 left-4 w-9 h-9 rounded-full border-2 border-white/50 bg-black/30 flex items-center justify-center text-white font-bold text-xs backdrop-blur-sm shadow-lg">AS</div>
+          <div className="absolute bottom-4 left-4 bg-black/90 text-white text-xs font-semibold px-4 py-1.5 rounded shadow-lg">
+            {news.categories?.name} / {formattedDate}, {formattedTime}
+          </div>
         </div>
 
-        {/* Headline */}
-        <h1 className="text-2xl md:text-4xl font-black text-gray-900 leading-tight mb-4">
-          {news.headline}
-        </h1>
+        {/* Article Content */}
+        <div className="p-6 md:p-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 leading-snug mb-6 border-b pb-4">
+            {news.headline}
+          </h1>
 
-        {news.subheadline && (
-          <p className="text-base md:text-lg text-gray-600 font-medium mb-4 leading-relaxed">
-            {news.subheadline}
-          </p>
-        )}
-
-        {/* Time Stamp */}
-        <div className="flex items-center gap-2 text-xs text-gray-400 font-medium mb-6 pb-4 border-b border-gray-200">
-          <Clock size={14} />
-          <span>प्रकाशित: {timeAgo(news.published_at)}</span>
-          {news.is_breaking && (
-            <span className="ml-2 bg-red-600 text-white font-bold px-2 py-0.5 rounded text-[10px]">
-              BREAKING
-            </span>
+          {news.subheadline && (
+            <p className="text-slate-600 text-sm md:text-base font-medium mb-6 leading-relaxed">
+              {news.subheadline}
+            </p>
           )}
-        </div>
 
-        {/* Featured Image */}
-        {news.featured_image && (
-          <div className="rounded-2xl overflow-hidden mb-8 shadow-lg">
-            <img
-              src={news.featured_image}
-              alt={news.headline}
-              className="w-full h-auto max-h-[480px] object-cover"
-            />
-          </div>
-        )}
-
-        {/* ⭐ POINT-TO-POINT NEWS CONTENT */}
-        <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-200 mb-8">
-          <h2 className="text-lg md:text-xl font-black text-gray-900 mb-6 flex items-center gap-2 border-b pb-3">
-            <span className="w-1.5 h-6 bg-red-600 rounded-full"></span>
-            खबर के मुख्य बिंदु (Key Highlights)
-          </h2>
-
-          <div className="space-y-4">
-            {news.points && news.points.map((point, index) => (
-              <div key={index} className="flex items-start gap-3.5">
-                <span className="bg-red-600 text-white text-xs font-black w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
-                  {index + 1}
-                </span>
-                <p className="text-gray-800 text-base md:text-lg leading-relaxed font-normal">
-                  {point}
-                </p>
+          {/* Red LIVE Box (If Breaking/Trending) */}
+          {(news.is_breaking || news.is_trending) && (
+            <div className="border border-gray-200 rounded-lg overflow-hidden mb-8 shadow-sm">
+              <div className="bg-[#cc0000] text-white px-4 py-2.5 flex items-center gap-3">
+                <span className="w-3 h-3 bg-white rounded-full animate-pulse"></span>
+                <span className="font-bold text-sm tracking-wide">LIVE</span>
+                <span className="font-semibold text-sm border-l border-white/30 pl-3 ml-1">लाइव अपडेट</span>
               </div>
-            ))}
-          </div>
-        </div>
+              <div className="p-4 bg-red-50/30">
+                <div className="flex items-start gap-4">
+                  <span className="text-red-700 font-bold text-sm shrink-0 mt-0.5">{formattedTime}</span>
+                  <p className="text-slate-800 text-sm font-medium leading-relaxed">{news.points[0]}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
-        {/* WhatsApp Share Box */}
-        <div className="bg-gray-100 rounded-2xl p-6 mb-8 border border-gray-200">
-          <p className="text-sm font-bold text-gray-700 mb-3">इस खबर को दोस्तों के साथ साझा करें:</p>
-          <ShareButtons headline={news.headline} />
+          {/* Details Points */}
+          <div className="space-y-6">
+            <h3 className="text-lg font-bold text-slate-800 border-b border-gray-200 pb-2">मुख्य बिंदु</h3>
+            <ul className="space-y-3">
+              {news.points?.map((point, i) => (
+                <li key={i} className="flex gap-3 text-slate-700 font-medium text-[15px] leading-relaxed">
+                  <span className="text-slate-800 font-black mt-1">•</span>
+                  {point}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </main>
-
       <Footer />
     </>
   );
