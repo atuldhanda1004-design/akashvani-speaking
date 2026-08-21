@@ -1,73 +1,37 @@
 import './globals.css';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import BreakingTicker from '@/components/BreakingTicker';
 
 export const metadata = {
-  title: 'आकाशवाणी स्पीकिंग | Akashvani Speaking - सच बोलने की आवाज़',
-  description: 'हरियाणा और भारत की ताज़ा खबरें, ट्रेंडिंग न्यूज़, वीडियो और रील्स - आकाशवाणी स्पीकिंग पर पढ़ें सबसे पहले',
-  keywords: 'Hindi News, Haryana News, Breaking News, Trending News, Akashvani Speaking, आकाशवाणी',
+  title: 'Akashvani Speaking | सच बोलने की आवाज़',
+  description: 'Akashvani Speaking - हरियाणा और भारत की ताज़ा खबरें, Live Updates, Breaking News',
+  keywords: 'Akashvani Speaking, Hindi News, Haryana News, Breaking News, Live Updates',
   openGraph: {
-    title: 'आकाशवाणी स्पीकिंग',
-    description: 'सच बोलने की आवाज़ - हरियाणा और भारत की ताज़ा खबरें',
+    title: 'Akashvani Speaking',
+    description: 'सच बोलने की आवाज़',
     url: 'https://akashvanispeaking.news',
     siteName: 'Akashvani Speaking',
     locale: 'hi_IN',
     type: 'website',
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  alternates: {
-    canonical: 'https://akashvanispeaking.news',
-  },
+  robots: { index: true, follow: true },
 };
 
-// Structured Data for AI Search + Google
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'NewsMediaOrganization',
-  name: 'आकाशवाणी स्पीकिंग',
-  alternateName: 'Akashvani Speaking',
+  name: 'Akashvani Speaking',
   url: 'https://akashvanispeaking.news',
-  logo: 'https://akashvanispeaking.news/logo.png',
-  sameAs: [
-    'https://facebook.com/akashvanispeaking',
-    'https://instagram.com/akashvanispeaking',
-    'https://youtube.com/@akashvanispeaking',
-    'https://twitter.com/akashvanispeak',
-  ],
-  contactPoint: {
-    '@type': 'ContactPoint',
-    contactType: 'customer service',
-    email: 'info@akashvanispeaking.news',
-  },
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="hi" dir="ltr">
+    <html lang="hi">
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-        <link rel="icon" href="/favicon.ico" />
-        <meta name="google-adsense-account" content="ca-pub-XXXXXXXXXXXXXXXX" />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
-      <body className="bg-gray-50 font-sans antialiased">
-        <BreakingTicker />
-        <Header />
-        <main className="min-h-screen">{children}</main>
-        <Footer />
+      <body className="bg-[#f5f5f5] font-sans antialiased">
+        {children}
       </body>
     </html>
   );

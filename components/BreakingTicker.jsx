@@ -1,67 +1,44 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { AlertTriangle } from 'lucide-react';
 
 export default function BreakingTicker() {
-  const [breakingNews, setBreakingNews] = useState([]);
+  const [items, setItems] = useState([]);
 
   useEffect(() => {
-    const fetchBreaking = async () => {
+    const load = async () => {
       const { data } = await supabase
         .from('news')
-        .select('id, headline, slug')
-        .eq('is_breaking', true)
+        .select('headline, slug')
         .eq('status', 'approved')
+        .or('is_breaking.eq.true,is_trending.eq.true')
         .order('published_at', { ascending: false })
-        .limit(10);
-      setBreakingNews(data || []);
+        .limit(8);
+      setItems(data || []);
     };
-    fetchBreaking();
-
-    // Real-time updates (automated!)
-    const channel = supabase
-      .channel('breaking-ticker')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'news' }, fetchBreaking)
-      .subscribe();
-
-    return () => supabase.removeChannel(channel);
+    load();
   }, []);
 
-  if (!breakingNews.length) return null;
+  if (!items.length) return null;
+
+  const doubled = [...items, ...items];
 
   return (
     <div className="bg-red-600 text-white py-2 overflow-hidden">
       <div className="flex items-center max-w-7xl mx-auto px-4">
-        <span className="flex items-center gap-1 bg-white text-red-600 px-3 py-1 rounded font-bold text-sm mr-4 shrink-0 animate-pulse">
-          <AlertTriangle size={14} /> ब्रेकिंग
+        <span className="bg-white text-red-600 px-3 py-0.5 rounded text-xs font-black mr-4 shrink-0 pulse-dot">
+          ● BREAKING
         </span>
         <div className="overflow-hidden flex-1">
-          <div className="animate-marquee whitespace-nowrap">
-            {breakingNews.map((news, i) => (
-              <a
-                key={news.id}
-                href={`/news/${news.slug}`}
-                className="inline-block mx-8 hover:underline text-sm"
-              >
-                🔴 {news.headline}
+          <div className="animate-scroll-left whitespace-nowrap flex">
+            {doubled.map((n, i) => (
+              <a key={i} href={`/news/${n.slug}`} className="inline-block mx-6 text-sm font-medium hover:underline">
+                {n.headline}
               </a>
             ))}
           </div>
         </div>
       </div>
-      <style jsx>{`
-        @keyframes marquee {
-          0% { transform: translateX(100%); }
-          100% { transform: translateX(-100%); }
-        }
-        .animate-marquee {
-          animation: marquee 30s linear infinite;
-        }
-        .animate-marquee:hover {
-          animation-play-state: paused;
-        }
-      `}</style>
     </div>
   );
 }

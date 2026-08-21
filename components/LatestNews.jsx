@@ -1,63 +1,88 @@
 'use client';
-import Link from 'next/link';
-import { getTimeAgo } from '@/lib/utils';
-import { Clock, ChevronRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
-export default function LatestNews({ news }) {
-  if (!news || news.length === 0) {
-    return <div className="text-gray-500 py-6">कोई ताज़ा खबर नहीं मिली।</div>;
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
+  if (diff < 1) return 'अभी-अभी';
+  if (diff < 60) return `${diff} मिनट पहले`;
+  if (diff < 1440) return `${Math.floor(diff / 60)} घंटे पहले`;
+  return `${Math.floor(diff / 1440)} दिन पहले`;
+}
+
+export default function LatestNews() {
+  const [news, setNews] = useState([]);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase
+        .from('news')
+        .select('id, slug, headline, points, published_at, featured_image, is_breaking, categories(name)')
+        .eq('status', 'approved')
+        .order('published_at', { ascending: false })
+        .limit(12);
+      setNews(data || []);
+    };
+    load();
+  }, []);
+
+  if (!news.length) {
+    return (
+      <section id="latest" className="max-w-7xl mx-auto px-4 mt-10">
+        <h2 className="text-xl font-black text-gray-900 border-l-4 border-red-600 pl-3 mb-6">LATEST NEWS</h2>
+        <div className="bg-white rounded-2xl p-8 text-center text-gray-400 border">
+          <p className="text-lg font-semibold">📰 ताज़ा खबरें लोड हो रही हैं...</p>
+          <p className="text-sm mt-1">Admin Panel → नई खबर जोड़ें → Editor Approve करें</p>
+        </div>
+      </section>
+    );
   }
 
   return (
-    <section>
-      <div className="flex items-center justify-between border-b pb-3 mb-6">
-        <h2 className="text-2xl font-black text-gray-900 border-l-4 border-red-600 pl-3">
-          ताज़ा खबरें (Latest News)
-        </h2>
-      </div>
+    <section id="latest" className="max-w-7xl mx-auto px-4 mt-10">
+      <h2 className="text-xl font-black text-gray-900 border-l-4 border-red-600 pl-3 mb-6">LATEST NEWS</h2>
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {news.map((item) => (
-          <Link
+          <a
             key={item.id}
             href={`/news/${item.slug}`}
-            className="group block bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition"
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition group"
           >
-            <div className="flex flex-col sm:flex-row gap-4">
-              {item.featured_image && (
-                <img
-                  src={item.featured_image}
-                  alt={item.headline}
-                  className="w-full sm:w-44 h-28 object-cover rounded-lg shrink-0"
-                />
+            {/* Photo */}
+            <div className="h-48 overflow-hidden bg-gray-200 relative">
+              {item.featured_image ? (
+                <img src={item.featured_image} alt={item.headline} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400 text-4xl">📰</div>
               )}
-              <div className="flex-1 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    {item.categories && (
-                      <span className="bg-red-50 text-red-600 text-xs font-bold px-2 py-0.5 rounded">
-                        {item.categories.name}
-                      </span>
-                    )}
-                    <span className="text-xs text-gray-400 flex items-center gap-1">
-                      <Clock size={12} /> {getTimeAgo(item.published_at)}
-                    </span>
-                  </div>
-                  <h3 className="font-bold text-gray-900 text-base group-hover:text-red-600 transition line-clamp-2">
-                    {item.headline}
-                  </h3>
-                  {item.points && item.points.length > 0 && (
-                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                      • {item.points[0]}
-                    </p>
-                  )}
-                </div>
-                <div className="mt-2 text-xs text-red-600 font-bold flex items-center gap-1">
-                  पूरा पढ़ें <ChevronRight size={14} />
-                </div>
+              {item.is_breaking && (
+                <span className="absolute top-3 left-3 bg-red-600 text-white text-[10px] px-2 py-0.5 rounded font-bold">BREAKING</span>
+              )}
+              {item.categories && (
+                <span className="absolute bottom-3 left-3 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded font-medium">
+                  {item.categories.name}
+                </span>
+              )}
+            </div>
+
+            {/* Headline + Time */}
+            <div className="p-4">
+              <h3 className="font-bold text-base text-gray-900 line-clamp-2 group-hover:text-red-600 transition leading-snug mb-2">
+                {item.headline}
+              </h3>
+              {item.points?.[0] && (
+                <p className="text-xs text-gray-500 line-clamp-2 mb-3">• {item.points[0]}</p>
+              )}
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-gray-400 font-medium">
+                  🕐 {timeAgo(item.published_at)}
+                </span>
+                <span className="text-[11px] text-red-600 font-bold group-hover:underline">पूरा पढ़ें →</span>
               </div>
             </div>
-          </Link>
+          </a>
         ))}
       </div>
     </section>
