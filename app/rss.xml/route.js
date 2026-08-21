@@ -1,47 +1,34 @@
-import { supabase } from '@/lib/supabase';
-
-export const dynamic = 'force-dynamic';
+import { dummyTrendingNews, dummyLatestNews } from '@/lib/dummyData'
 
 export async function GET() {
-  try {
-    const { data: news } = await supabase
-      .from('news')
-      .select('*, categories(name)')
-      .eq('status', 'approved')
-      .order('published_at', { ascending: false })
-      .limit(50);
+  const baseUrl = 'https://akashvanispeaking.news'
+  const allNews = [...dummyTrendingNews, ...dummyLatestNews]
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://akashvanispeaking.news';
-
-    let xml = `<?xml version="1.0" encoding="UTF-8"?>
+  const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-<channel>
-  <title>आकाशवाणी स्पीकिंग</title>
-  <link>${baseUrl}</link>
-  <description>हरियाणा और भारत की ताज़ा खबरें</description>
-  <language>hi</language>
-  <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml"/>`;
+  <channel>
+    <title>Akashvani Speaking</title>
+    <link>${baseUrl}</link>
+    <description>हरियाणा की सबसे तेज़ और विश्वसनीय हिंदी न्यूज़ पोर्टल</description>
+    <language>hi</language>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml"/>
+    ${allNews.map(news => `
+    <item>
+      <title><![CDATA[${news.headline}]]></title>
+      <link>${baseUrl}/news/${news.slug}</link>
+      <description><![CDATA[${news.subheadline || news.headline}]]></description>
+      <pubDate>${new Date(news.published_at).toUTCString()}</pubDate>
+      <guid>${baseUrl}/news/${news.slug}</guid>
+      ${news.featured_image ? `<enclosure url="${news.featured_image}" type="image/jpeg"/>` : ''}
+    </item>`).join('')}
+  </channel>
+</rss>`
 
-    news?.forEach((n) => {
-      xml += `
-  <item>
-    <title><![CDATA[${n.headline}]]></title>
-    <link>${baseUrl}/news/${n.slug}</link>
-    <description><![CDATA[${n.points?.join('. ') || ''}]]></description>
-    <pubDate>${n.published_at ? new Date(n.published_at).toUTCString() : new Date().toUTCString()}</pubDate>
-    <category>${n.categories?.name || 'News'}</category>
-    <guid>${baseUrl}/news/${n.slug}</guid>
-  </item>`;
-    });
-
-    xml += '\n</channel>\n</rss>';
-
-    return new Response(xml, {
-      headers: { 'Content-Type': 'application/xml', 'Cache-Control': 'public, max-age=3600' },
-    });
-  } catch (e) {
-    return new Response('<rss version="2.0"><channel><title>Akashvani Speaking</title></channel></rss>', {
-      headers: { 'Content-Type': 'application/xml' },
-    });
-  }
+  return new Response(rss, {
+    headers: {
+      'Content-Type': 'application/xml',
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+    },
+  })
 }
