@@ -1,6 +1,5 @@
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import LiveTicker from '@/components/LiveTicker'
 import TrendingNews from '@/components/TrendingNews'
 import LatestNews from '@/components/LatestNews'
 import LiveUpdatesBar from '@/components/LiveUpdatesBar'
@@ -8,7 +7,7 @@ import ScrollToTop from '@/components/ScrollToTop'
 import { getNews, getLiveUpdates } from '@/lib/supabase'
 import { dummyTrendingNews, dummyLatestNews, dummyLiveUpdates } from '@/lib/dummyData'
 
-export const revalidate = 60 // ISR - regenerate every 60 seconds
+export const revalidate = 60 
 
 async function fetchTrending() {
   const data = await getNews({ isTrending: true, limit: 5 })
@@ -42,37 +41,23 @@ export default async function HomePage() {
 
   return (
     <>
-      <script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'NewsMediaOrganization',
-      name: 'Akashvani Speaking',
-      url: 'https://akashvanispeaking.news',
-      logo: 'https://akashvanispeaking.news/logo.png',
-      sameAs: [
-        'https://www.youtube.com/@akashvanispeaking',
-        'https://www.instagram.com/akashvanispeaking',
-        'https://www.facebook.com/akashvanispeaking',
-        'https://x.com/AkashvaniSpeak',
-      ],
-      foundingDate: '2024',
-      address: {
-        '@type': 'PostalAddress',
-        addressRegion: 'Haryana',
-        addressCountry: 'IN',
-      },
-    }),
-  }}
-/>
       <Header />
-      <LiveTicker updates={live} />
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        <section id="trending"><TrendingNews news={trending} /></section>
-        <section id="latest"><LatestNews news={latest} /></section>
-        <section id="live"><LiveUpdatesBar updates={live} /></section>
+      <main className="max-w-7xl mx-auto px-4 py-6 min-h-[50vh]">
+        {/* Trending / Live Section */}
+        <section id="trending">
+          <TrendingNews news={trending} />
+        </section>
+
+        {/* Latest News Section */}
+        <section id="latest" className="mt-8">
+          <LatestNews news={latest} />
+        </section>
+
+        {/* Live Updates Section */}
+        <section id="live" className="mt-8">
+          <LiveUpdatesBar updates={live} />
+        </section>
       </main>
 
       <Footer />

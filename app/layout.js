@@ -1,6 +1,7 @@
 import './globals.css'
 import Script from 'next/script'
 import { SITE_CONFIG } from '@/lib/constants'
+import BottomNav from '@/components/BottomNav'
 
 export const metadata = {
   metadataBase: new URL(SITE_CONFIG.url),
@@ -20,10 +21,10 @@ export const metadata = {
     },
   },
   verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || 'YOUR_GOOGLE_SITE_VERIFICATION_CODE',
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '',
   },
   other: {
-    'google-adsense-account': process.env.NEXT_PUBLIC_ADSENSE_ID || 'ca-pub-XXXXXXXXXXXXXXXX',
+    'google-adsense-account': process.env.NEXT_PUBLIC_ADSENSE_ID || '',
   },
   openGraph: {
     title: `${SITE_CONFIG.name} | ${SITE_CONFIG.tagline}`,
@@ -49,7 +50,7 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: '#1a237e',
+  themeColor: '#30567D', // Changed to match your primary header color
 }
 
 export default function RootLayout({ children }) {
@@ -66,8 +67,13 @@ export default function RootLayout({ children }) {
           strategy="afterInteractive"
         />
       </head>
-      <body className="min-h-screen flex flex-col">
+      {/* 
+        bg-brand-background gives it the #E7EEF6 color you requested. 
+        pb-16 is to ensure the footer doesn't get hidden behind the mobile BottomNav 
+      */}
+      <body className="min-h-screen flex flex-col bg-brand-background pb-16 md:pb-0">
         {children}
+        <BottomNav />
       </body>
     </html>
   )

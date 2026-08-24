@@ -6,9 +6,11 @@ import { SITE_CONFIG } from '@/lib/constants'
 
 export default function Footer() {
   return (
-    <footer className="bg-brand-navy mt-auto">
+    <footer className="bg-brand-secondary mt-auto border-t border-brand-primary/20 pb-16 md:pb-0">
+      {/* pb-16 added above so it doesn't hide behind the mobile bottom nav */}
       <div className="max-w-7xl mx-auto px-4 py-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Logo & Description */}
           <div>
             <div className="flex items-center gap-3 mb-4">
               <Logo size="md" />
@@ -17,11 +19,12 @@ export default function Footer() {
                 <p className="text-white/50 text-xs font-yantramanav">{SITE_CONFIG.tagline}</p>
               </div>
             </div>
-            <p className="text-white/40 text-sm font-yantramanav leading-relaxed max-w-xs">
+            <p className="text-white/60 text-sm font-yantramanav leading-relaxed max-w-xs">
               {SITE_CONFIG.description}
             </p>
           </div>
 
+          {/* Important Links */}
           <div>
             <h4 className="text-white font-poppins font-semibold text-sm mb-4">महत्त्वपूर्ण लिंक</h4>
             <ul className="space-y-2">
@@ -34,7 +37,7 @@ export default function Footer() {
                 { label: 'सभी खबरें', href: '/all-news' },
               ].map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-white/50 text-sm font-yantramanav hover:text-white transition-colors">
+                  <Link href={link.href} className="text-white/60 text-sm font-yantramanav hover:text-white transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -42,26 +45,26 @@ export default function Footer() {
             </ul>
           </div>
 
+          {/* Social Links */}
           <div>
             <h4 className="text-white font-poppins font-semibold text-sm mb-4">हमसे जुड़ें</h4>
             <SocialIcons variant="footer" />
-
-            <div className="mt-6 p-4 bg-white/5 rounded-xl">
-              <p className="text-white/40 text-xs font-poppins">Developed by</p>
-              <p className="text-white/70 text-sm font-poppins font-semibold">{SITE_CONFIG.developer.name}</p>
-              <a href={`tel:${SITE_CONFIG.developer.phone}`} className="text-white/40 text-xs font-poppins mt-1 block hover:text-white transition-colors">
-                📞 {SITE_CONFIG.developer.phone}
-              </a>
-            </div>
           </div>
         </div>
       </div>
 
-      <div className="border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <p className="text-center text-white/30 text-xs font-poppins">
-            © {new Date().getFullYear()} {SITE_CONFIG.name}. सभी अधिकार सुरक्षित।
+      {/* Copyright & Developer Credit Bar */}
+      <div className="border-t border-white/10 bg-brand-primary/10 py-4">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
+          <p className="text-white/50 text-xs font-poppins">
+            © {new Date().getFullYear()} Akashvani Speaking. All rights reserved.
           </p>
+          <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-xs font-poppins">
+             <span className="text-white/40">Developed by</span>
+             <a href={`tel:${SITE_CONFIG.developer.phone}`} className="text-white font-semibold hover:text-brand-background transition-colors">
+               {SITE_CONFIG.developer.name} ({SITE_CONFIG.developer.phone})
+             </a>
+          </div>
         </div>
       </div>
     </footer>

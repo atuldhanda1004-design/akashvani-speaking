@@ -1,19 +1,20 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Calendar, MapPin, User, Tag } from 'lucide-react'
+import { ArrowLeft, Calendar, MapPin, Share2, Bookmark, Tag, User } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ImageWithWatermark from '@/components/ImageWithWatermark'
 import TextToSpeech from '@/components/TextToSpeech'
 import ShareButtons from '@/components/ShareButtons'
 import ScrollToTop from '@/components/ScrollToTop'
+import RelatedNews from '@/components/RelatedNews'
 import { getNewsBySlug } from '@/lib/supabase'
 import { dummyTrendingNews, dummyLatestNews, formatDate, formatTime, timeAgo } from '@/lib/dummyData'
 import { SITE_CONFIG } from '@/lib/constants'
-import NewsJsonLd from '@/components/NewsJsonLd'
 
 export const revalidate = 60
 
+// Fetch News Logic
 async function getNewsData(slug) {
   const data = await getNewsBySlug(slug)
   if (data) return data
@@ -21,6 +22,7 @@ async function getNewsData(slug) {
   return all.find((n) => n.slug === slug) || null
 }
 
+// SEO Metadata Logic
 export async function generateMetadata({ params }) {
   const news = await getNewsData(params.slug)
   if (!news) return { title: 'खबर नहीं मिली' }
@@ -53,146 +55,133 @@ export default async function NewsDetailPage({ params }) {
   return (
     <>
       <Header />
-<NewsJsonLd news={news} />
-      <main className="max-w-4xl mx-auto px-4 py-6">
-        <Link href="/" className="inline-flex items-center gap-2 text-brand-navy font-poppins text-sm font-medium hover:underline mb-4 group">
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          वापस जाएं
-        </Link>
 
-        <article className="bg-white rounded-2xl overflow-hidden shadow-sm animate-fade-in">
-          <div className="relative">
-            <ImageWithWatermark
-              src={news.featured_image}
-              alt={news.headline}
-              location={news.location || news.categories?.name}
-              date={`${formatDate(news.published_at)}, ${formatTime(news.published_at)}`}
-              className="h-64 sm:h-80 md:h-96"
-              fill priority sizes="100vw"
-            />
-            {news.is_breaking && (
-              <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5 bg-brand-red text-white px-4 py-1.5 rounded-full text-sm font-poppins font-bold shadow-lg animate-pulse-red">
-                <span className="w-2.5 h-2.5 bg-white rounded-full" />LIVE
-              </div>
-            )}
+      <main className="max-w-3xl mx-auto bg-white min-h-screen shadow-sm">
+        {/* Top Back Button */}
+        <div className="px-4 pt-4 pb-2 bg-white">
+          <Link href="/" className="inline-flex items-center gap-2 text-brand-primary font-poppins text-sm font-medium hover:underline group">
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            वापस जाएं
+          </Link>
+        </div>
+
+        {/* Featured Image */}
+        <div className="relative">
+          <ImageWithWatermark
+            src={news.featured_image}
+            alt={news.headline}
+            location={news.location || news.categories?.name}
+            date={`${formatDate(news.published_at)}, ${formatTime(news.published_at)}`}
+            className="h-64 sm:h-80 md:h-96 w-full"
+            fill
+            priority
+            sizes="100vw"
+          />
+        </div>
+
+        <div className="p-4 md:p-8">
+          {/* Headline & Subheadline */}
+          <h1 className="text-2xl md:text-3xl font-bold font-yantramanav text-gray-900 leading-tight mb-4">
+            {news.headline}
+          </h1>
+
+          {news.subheadline && (
+            <p className="text-sm md:text-base text-gray-700 font-yantramanav mb-6 leading-relaxed">
+              {news.subheadline}
+            </p>
+          )}
+
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-6 border-b border-gray-100">
+             <TextToSpeech text={fullText} headline={news.headline} />
           </div>
 
-          <div className="p-5 md:p-8">
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              {news.categories && (
-                <Link href={`/category/${news.categories.slug}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-navy/10 text-brand-navy rounded-full text-xs font-poppins font-semibold hover:bg-brand-navy/20 transition-colors">
-                  <Tag className="w-3 h-3" />{news.categories.name}
-                </Link>
-              )}
-              <span className="flex items-center gap-1 text-gray-400 text-xs font-poppins">
-                <Calendar className="w-3 h-3" />{timeAgo(news.published_at)}
-              </span>
-              {news.location && (
-                <span className="flex items-center gap-1 text-gray-400 text-xs font-poppins">
-                  <MapPin className="w-3 h-3" />{news.location}
-                </span>
-              )}
-            </div>
+          {/* Live Update Red Box */}
+          {news.live_updates?.length > 0 && (
+             <div className="border-2 border-brand-red rounded p-4 mb-6 relative mt-4 bg-white">
+               <span className="absolute -top-3.5 left-4 bg-brand-red text-white text-xs font-bold px-3 py-1 rounded-sm">
+                 लाइव अपडेट
+               </span>
+               <div className="flex gap-3 mt-2 items-start">
+                 <span className="bg-blue-50 text-brand-primary text-xs font-bold px-3 py-1.5 rounded shrink-0">
+                   {news.live_updates[0].time}
+                 </span>
+                 <p className="text-sm md:text-base font-yantramanav text-gray-800 leading-tight mt-0.5">
+                   {news.live_updates[0].text}
+                 </p>
+               </div>
+             </div>
+          )}
 
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold font-yantramanav text-gray-900 leading-tight mb-4">
-              {news.headline}
-            </h1>
-            <div className="w-20 h-1 bg-brand-navy rounded-full mb-5" />
-
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-6 border-b border-gray-100">
-              <TextToSpeech text={fullText} headline={news.headline} />
-              <ShareButtons url={shareUrl} title={news.headline} />
-            </div>
-
-            {news.subheadline && (
-              <p className="text-base md:text-lg text-gray-700 font-yantramanav leading-relaxed mb-6">
-                {news.subheadline}
-              </p>
-            )}
-
-            {news.live_updates?.length > 0 && (
-              <div className="mb-8 rounded-xl overflow-hidden border border-gray-100">
-                <div className="bg-brand-red text-white px-5 py-3 flex items-center gap-2">
-                  <span className="w-3 h-3 bg-white rounded-full animate-pulse-red" />
-                  <span className="font-yantramanav font-bold">LIVE</span>
-                  <span className="font-yantramanav font-bold ml-1">लाइव अपडेट</span>
+          {/* Points Section (Parsing logic for Headings) */}
+          <div className="space-y-4 mb-8">
+            {news.points?.map((point, idx) => {
+              // If point includes ":" or starts with "[H]", treat it as a bold heading
+              const isHeading = point.includes(':') || point.startsWith('[H]')
+              
+              if (isHeading) {
+                const cleanPoint = point.replace('[H]', '')
+                return (
+                  <h3 key={idx} className="font-bold text-lg md:text-xl font-yantramanav text-gray-900 mt-6 border-b border-gray-100 pb-2">
+                    {cleanPoint}
+                  </h3>
+                )
+              }
+              
+              return (
+                <div key={idx} className="flex gap-3 items-start pl-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand-primary mt-2 shrink-0" />
+                  <p className="text-base text-gray-800 font-yantramanav leading-relaxed">{point}</p>
                 </div>
-                <div className="p-4 space-y-3 bg-gray-50">
-                  {news.live_updates.map((update, idx) => (
-                    <div key={idx} className="flex items-start gap-3 p-3 bg-white rounded-xl border border-gray-100 animate-fade-in-up"
-                         style={{ animationDelay: `${idx * 100}ms` }}>
-                      <span className="bg-brand-navy text-white text-xs font-poppins font-bold px-3 py-1.5 rounded-lg flex-shrink-0 min-w-[85px] text-center">
-                        {update.time}
-                      </span>
-                      <span className="text-brand-red text-lg leading-none mt-0.5">•</span>
-                      <p className="text-sm font-yantramanav text-gray-800 leading-relaxed">{update.text}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {news.points?.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-xl font-bold font-yantramanav text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="w-1 h-6 bg-brand-navy rounded-full" />मुख्य बिंदु
-                </h2>
-                <ul className="space-y-3">
-                  {news.points.map((point, idx) => (
-                    <li key={idx} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl animate-fade-in-up"
-                        style={{ animationDelay: `${idx * 80}ms` }}>
-                      <span className="w-2 h-2 bg-brand-navy rounded-full mt-2 flex-shrink-0" />
-                      <p className="text-base font-yantramanav text-gray-800 leading-relaxed">{point}</p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {news.video_url && (
-              <div className="mb-8">
-                <h2 className="text-xl font-bold font-yantramanav text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="w-1 h-6 bg-brand-red rounded-full" />वीडियो
-                </h2>
-                <div className="aspect-video rounded-xl overflow-hidden bg-black">
-                  {news.video_type === 'youtube' ? (
-                    <iframe
-                      src={`https://www.youtube.com/embed/${news.video_url.split('v=')[1]?.split('&')[0] || news.video_url.split('/').pop()}`}
-                      className="w-full h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  ) : (
-                    <video src={news.video_url} controls className="w-full h-full" />
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center justify-between pt-6 border-t border-gray-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-brand-navy/10 rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-brand-navy" />
-                </div>
-                <div>
-                  <p className="text-sm font-poppins font-medium text-gray-900">
-                    {news.users?.full_name || 'Reporter'}
-                  </p>
-                  <p className="text-xs text-gray-400 font-poppins">
-                    Journalist, {SITE_CONFIG.name}
-                  </p>
-                </div>
-              </div>
-            </div>
+              )
+            })}
           </div>
-        </article>
 
-        <div className="mt-6 p-5 bg-white rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-gray-500 font-yantramanav text-sm">
-            यह खबर अपने दोस्तों के साथ शेयर करें
+          {/* Video Section */}
+          {news.video_url && (
+            <div className="mb-8">
+              <h2 className="text-xl font-bold font-yantramanav text-gray-900 mb-4 flex items-center gap-2">
+                <span className="w-1 h-6 bg-brand-red rounded-full" />वीडियो
+              </h2>
+              <div className="aspect-video rounded-xl overflow-hidden bg-black shadow-md">
+                {news.video_type === 'youtube' ? (
+                  <iframe
+                    src={`https://www.youtube.com/embed/${news.video_url.split('v=')[1]?.split('&')[0] || news.video_url.split('/').pop()}`}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <video src={news.video_url} controls className="w-full h-full" />
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Reporter Name */}
+          <p className="text-xs text-gray-400 font-yantramanav mb-6 border-b border-gray-100 pb-4">
+            संवाददाता: <span className="font-bold text-gray-600">{news.users?.full_name || 'Super Administrator'}</span>
           </p>
-          <ShareButtons url={shareUrl} title={news.headline} />
+
+          {/* Bottom Action Bar (Contact, Share, Save) */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-8">
+            <Link href="/contact" className="flex-1 bg-brand-secondary text-white text-xs md:text-sm font-yantramanav py-3 rounded text-center hover:bg-brand-primary transition-colors shadow-sm">
+              सूचना सुझाव व जनहित के लिए संपर्क करें
+            </Link>
+            <div className="flex gap-2">
+               <div className="flex-1 sm:flex-none">
+                 <ShareButtons url={shareUrl} title={news.headline} compact />
+               </div>
+               <button className="flex-1 sm:flex-none px-4 py-3 border border-gray-200 rounded flex items-center justify-center gap-1.5 text-xs text-gray-600 hover:bg-gray-50 shadow-sm">
+                 <Bookmark className="w-4 h-4" /> सेव
+               </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Related News Section */}
+        <div className="bg-brand-background p-4 md:p-8 border-t border-gray-200">
+           <h2 className="text-lg font-bold font-poppins text-brand-secondary mb-4">Related News</h2>
+           <RelatedNews categorySlug={news.categories?.slug} currentId={news.id} />
         </div>
       </main>
 
