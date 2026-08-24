@@ -7,7 +7,7 @@ import ScrollToTop from '@/components/ScrollToTop'
 import { getNews, getLiveUpdates } from '@/lib/supabase'
 import { dummyTrendingNews, dummyLatestNews, dummyLiveUpdates } from '@/lib/dummyData'
 
-export const revalidate = 60 
+export const revalidate = 60
 
 async function fetchTrending() {
   const data = await getNews({ isTrending: true, limit: 5 })
@@ -24,7 +24,11 @@ async function fetchLive() {
   if (data?.length) {
     return data.map((n) => ({
       id: n.id,
-      time: new Date(n.published_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+      time: new Date(n.published_at).toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }),
       headline: n.headline,
       slug: n.slug,
     }))
@@ -32,7 +36,8 @@ async function fetchLive() {
   return dummyLiveUpdates
 }
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }) {
+  const tab = searchParams?.tab || 'latest'
   const [trending, latest, live] = await Promise.all([
     fetchTrending(),
     fetchLatest(),
@@ -43,21 +48,21 @@ export default async function HomePage() {
     <>
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 py-6 min-h-[50vh]">
-        {/* Trending / Live Section */}
-        <section id="trending">
-          <TrendingNews news={trending} />
-        </section>
-
-        {/* Latest News Section */}
-        <section id="latest" className="mt-8">
-          <LatestNews news={latest} />
-        </section>
-
-        {/* Live Updates Section */}
-        <section id="live" className="mt-8">
-          <LiveUpdatesBar updates={live} />
-        </section>
+      <main className="max-w-7xl mx-auto px-4 py-4 min-h-[50vh]">
+        {tab === 'live' ? (
+          <>
+            <section id="trending">
+              <TrendingNews news={trending} />
+            </section>
+            <section id="live" className="mt-6">
+              <LiveUpdatesBar updates={live} />
+            </section>
+          </>
+        ) : (
+          <section id="latest">
+            <LatestNews news={latest} />
+          </section>
+        )}
       </main>
 
       <Footer />
