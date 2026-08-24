@@ -7,7 +7,7 @@ import ShareButtons from './ShareButtons'
 import { formatDate, formatTime } from '@/lib/dummyData'
 import { SITE_CONFIG } from '@/lib/constants'
 
-export default function TrendingNews({ news = [] }) {
+export default function TrendingNews({ news = [], title = 'Trending / Live Update' }) {
   const [currentSlide, setCurrentSlide] = useState(0)
 
   const goToPrev = useCallback(() => {
@@ -30,18 +30,17 @@ export default function TrendingNews({ news = [] }) {
     <section className="mb-6">
       <div className="flex items-center gap-2 mb-3">
         <h2 className="text-lg sm:text-xl font-bold font-poppins text-brand-primary">
-          Trending / Live Update
+          {title}
         </h2>
         <span className="w-2.5 h-2.5 bg-brand-red rounded-full animate-pulse-red" />
       </div>
 
       <div className="relative group">
         <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden flex flex-col md:flex-row">
-          {/* Fixed height image box */}
           <div className="relative w-full md:w-1/2 h-56 sm:h-64 md:h-[340px] shrink-0 bg-gray-100">
             <ImageWithWatermark
               src={imageUrl}
-              alt={currentNews.headline || 'Trending'}
+              alt={currentNews.headline || 'News'}
               location={currentNews.location || currentNews.categories?.name || 'हरियाणा'}
               date={timeStr}
               className="absolute inset-0 w-full h-full"
@@ -75,7 +74,6 @@ export default function TrendingNews({ news = [] }) {
               )}
             </div>
 
-            {/* ONLY 3 BUTTONS */}
             <div className="flex items-center gap-2 mt-3 pt-2">
               <Link
                 href={`/news/${currentNews.slug}`}
