@@ -30,24 +30,27 @@ export default async function CategoryPage({ params }) {
     <>
       <Header />
       <main className="max-w-7xl mx-auto px-4 py-6 min-h-[50vh]">
-        {/* Back button — no emoji, only ArrowLeft icon */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-brand-primary font-poppins text-sm font-semibold hover:underline mb-4 group"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          वापस जाएं
-        </Link>
+        {/* Back button — Only Arrow Icon, No Emoji */}
+        <div className="mb-4">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-brand-primary font-poppins text-sm font-semibold hover:underline group"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            वापस जाएं
+          </Link>
+        </div>
 
-        <h1 className="section-title mb-6">
-          {category?.icon ? `${category.icon} ` : ''}
+        {/* Clean Category Title — NO EMOJI */}
+        <h1 className="section-title mb-6 text-2xl md:text-3xl font-bold font-yantramanav text-brand-primary">
           {category?.name || params.slug}
         </h1>
 
+        {/* News Grid */}
         {allNews.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {allNews.map((news, i) => (
-              <NewsCard key={news.id} news={news} index={i} />
+              <NewsCard key={news.id || i} news={news} index={i} />
             ))}
           </div>
         ) : (
