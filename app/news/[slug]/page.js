@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Bookmark } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import TextToSpeech from '@/components/TextToSpeech'
@@ -9,22 +9,16 @@ import ScrollToTop from '@/components/ScrollToTop'
 import RelatedNews from '@/components/RelatedNews'
 import ImageSlider from '@/components/ImageSlider'
 import { getNewsBySlug } from '@/lib/supabase'
-import { dummyTrendingNews, dummyLatestNews, formatDate, formatTime } from '@/lib/dummyData'
+import { formatDate, formatTime } from '@/lib/dummyData'
 import { SITE_CONFIG } from '@/lib/constants'
+import { SaveButton } from '@/components/TrendingNews'
 
 export const revalidate = 60
 
 async function getNewsData(slug) {
-  try {
-    const data = await getNewsBySlug(slug)
-    if (data) return data
-  } catch (error) {
-    console.error("DB Fetch failed, falling back to dummy data")
-  }
-  
-  // STRONG FALLBACK: 404 रोकने के लिए
-  const allDummyNews = [...dummyTrendingNews, ...dummyLatestNews]
-  return allDummyNews.find((n) => n.slug === slug) || null
+  // DB Fetch Code remains same
+  const data = await getNewsBySlug(slug)
+  return data || null
 }
 
 export async function generateMetadata({ params }) {
@@ -33,11 +27,12 @@ export async function generateMetadata({ params }) {
   const firstImage = news.featured_image ? news.featured_image.split(',')[0] : ''
   return {
     title: news.headline,
-    description: news.subheadline || news.headline,
+    description: news.subheadline,
     openGraph: {
       title: news.headline,
       description: news.subheadline,
-      images: [{ url: firstImage, width: 1200, height: 630 }],
+      // FB share image with watermark generated dynamically (Step 7)
+      images: [{ url: `${SITE_CONFIG.url}/api/og?title=${encodeURIComponent(news.headline)}&img=${encodeURIComponent(firstImage)}`, width: 1200, height: 630 }],
       type: 'article',
     }
   }
@@ -45,10 +40,7 @@ export async function generateMetadata({ params }) {
 
 export default async function NewsDetailPage({ params }) {
   const news = await getNewsData(params.slug)
-  
-  if (!news) {
-    return notFound() // सिर्फ तब 404 आएगा जब असली में खबर न हो
-  }
+  if (!news) notFound()
 
   const fullText = news.points ? news.points.join('। ').replace(/\[H\]/g, '') : news.subheadline || ''
   const shareUrl = `${SITE_CONFIG.url}/news/${news.slug}`
@@ -57,44 +49,42 @@ export default async function NewsDetailPage({ params }) {
   return (
     <>
       <Header />
-      <main className="max-w-3xl mx-auto bg-white min-h-screen shadow-sm">
-        <div className="px-4 pt-4 pb-2 bg-white">
-          <Link href="/" className="inline-flex items-center gap-2 text-brand-primary font-poppins text-sm font-medium hover:underline group">
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> वापस जाएं
+      <main className="max-w-3xl mx-auto bg-white min-h-screen shadow-sm pb-10">
+        
+        {/* NO EMOJI, ONLY ICON */}
+        <div className="px-4 pt-4 pb-2 bg-white border-b border-gray-50">
+          <Link href="/" className="inline-flex items-center gap-1.5 text-brand-primary font-poppins text-sm font-semibold hover:underline">
+            <ArrowLeft className="w-4 h-4" /> वापस जाएं
           </Link>
         </div>
 
         <ImageSlider 
           imageString={news.featured_image} 
           headline={news.headline}
-          location={news.location || news.categories?.name}
+          location={news.location}
           date={timeStr}
           reporter={news.users?.full_name}
         />
 
         <div className="p-4 md:p-8">
-          <h1 className="text-2xl md:text-3xl font-bold font-yantramanav text-gray-900 leading-tight mb-4">
+          {/* BLUE HEADLINE */}
+          <h1 className="text-2xl md:text-3xl font-bold font-yantramanav text-brand-primary leading-tight mb-4">
             {news.headline}
           </h1>
 
           {news.subheadline && (
-            <p className="text-sm md:text-base text-gray-700 font-yantramanav mb-6 leading-relaxed">
-              {news.subheadline}
-            </p>
+             <p className="text-sm md:text-base text-gray-700 font-yantramanav mb-4">{news.subheadline}</p>
           )}
 
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-6 border-b border-gray-100">
-             <TextToSpeech text={fullText} headline={news.headline} />
-             <ShareButtons url={shareUrl} title={news.headline} />
-          </div>
+          <div className="mb-6"><TextToSpeech text={fullText} headline={news.headline} /></div>
 
+          {/* DYNAMIC POINTS */}
           <div className="space-y-4 mb-8">
             {news.points?.map((point, idx) => {
               if (point.startsWith('[H]')) {
-                const headingText = point.replace('[H]', '').trim()
                 return (
-                  <h3 key={idx} className="font-bold text-lg md:text-xl font-yantramanav text-brand-primary mt-8 border-b border-gray-100 pb-2">
-                    {headingText}
+                  <h3 key={idx} className="font-bold text-xl text-brand-primary mt-8 border-b border-gray-100 pb-2">
+                    {point.replace('[H]', '').trim()}
                   </h3>
                 )
               }
@@ -107,32 +97,22 @@ export default async function NewsDetailPage({ params }) {
             })}
           </div>
 
-          {news.video_url && (
-            <div className="mb-8">
-              <h2 className="text-xl font-bold font-yantramanav text-gray-900 mb-4 flex items-center gap-2">
-                <span className="w-1 h-6 bg-brand-red rounded-full" />वीडियो न्यूज़
-              </h2>
-              <div className="aspect-video rounded-xl overflow-hidden bg-black shadow-md">
-                <iframe
-                  src={`https://www.youtube.com/embed/${news.video_url.split('v=')[1]?.split('&')[0] || news.video_url.split('/').pop()}`}
-                  className="w-full h-full" allowFullScreen
-                />
-              </div>
+          {/* SHARE & SAVE RIGHT ABOVE CONTACT BUTTON */}
+          <div className="bg-gray-50 p-4 rounded-xl mb-4 border border-gray-100 flex items-center justify-between">
+            <span className="text-sm font-bold text-gray-700">शेयर करें:</span>
+            <div className="flex gap-2">
+              <ShareButtons url={shareUrl} title={news.headline} compact />
+              <SaveButton news={news} />
             </div>
-          )}
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-8 border-t border-gray-100 pt-6">
-            <Link href="/contact" className="flex-1 bg-brand-secondary text-white text-xs md:text-sm font-yantramanav py-3 rounded text-center hover:bg-brand-primary transition-colors shadow-sm">
-              सूचना सुझाव व जनहित के लिए संपर्क करें
-            </Link>
-            <button className="px-4 py-3 border border-gray-200 rounded flex items-center justify-center gap-1.5 text-xs text-gray-600 hover:bg-gray-50 shadow-sm">
-              <Bookmark className="w-4 h-4" /> सेव करें
-            </button>
           </div>
+
+          <Link href="/contact" className="block w-full bg-brand-secondary text-white text-sm font-yantramanav py-3.5 rounded-lg text-center hover:bg-brand-primary transition-colors shadow-sm font-bold">
+            सूचना सुझाव व जनहित के लिए संपर्क करें
+          </Link>
         </div>
         
         <div className="bg-brand-background p-4 md:p-8 border-t border-gray-200">
-           <h2 className="text-lg font-bold font-poppins text-brand-secondary mb-4">Related News</h2>
+           <h2 className="text-lg font-bold font-poppins text-brand-secondary mb-4">संबंधित खबरें (Related)</h2>
            <RelatedNews categorySlug={news.categories?.slug} currentId={news.id} />
         </div>
       </main>
