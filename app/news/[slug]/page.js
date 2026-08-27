@@ -7,17 +7,24 @@ import TextToSpeech from '@/components/TextToSpeech'
 import ShareButtons from '@/components/ShareButtons'
 import ScrollToTop from '@/components/ScrollToTop'
 import RelatedNews from '@/components/RelatedNews'
-import ImageSlider from '@/components/ImageSlider' // Uses the new client component slider
+import ImageSlider from '@/components/ImageSlider'
 import { getNewsBySlug } from '@/lib/supabase'
-import { formatDate, formatTime } from '@/lib/dummyData'
+import { dummyTrendingNews, dummyLatestNews, formatDate, formatTime } from '@/lib/dummyData'
 import { SITE_CONFIG } from '@/lib/constants'
 
 export const revalidate = 60
 
 async function getNewsData(slug) {
-  const data = await getNewsBySlug(slug)
-  if (data) return data
-  return null // Return null if not in DB
+  try {
+    const data = await getNewsBySlug(slug)
+    if (data) return data
+  } catch (error) {
+    console.error("DB Fetch failed, falling back to dummy data")
+  }
+  
+  // STRONG FALLBACK: 404 रोकने के लिए
+  const allDummyNews = [...dummyTrendingNews, ...dummyLatestNews]
+  return allDummyNews.find((n) => n.slug === slug) || null
 }
 
 export async function generateMetadata({ params }) {
@@ -38,7 +45,10 @@ export async function generateMetadata({ params }) {
 
 export default async function NewsDetailPage({ params }) {
   const news = await getNewsData(params.slug)
-  if (!news) notFound()
+  
+  if (!news) {
+    return notFound() // सिर्फ तब 404 आएगा जब असली में खबर न हो
+  }
 
   const fullText = news.points ? news.points.join('। ').replace(/\[H\]/g, '') : news.subheadline || ''
   const shareUrl = `${SITE_CONFIG.url}/news/${news.slug}`
@@ -48,14 +58,12 @@ export default async function NewsDetailPage({ params }) {
     <>
       <Header />
       <main className="max-w-3xl mx-auto bg-white min-h-screen shadow-sm">
-        
         <div className="px-4 pt-4 pb-2 bg-white">
           <Link href="/" className="inline-flex items-center gap-2 text-brand-primary font-poppins text-sm font-medium hover:underline group">
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> वापस जाएं
           </Link>
         </div>
 
-        {/* Client Component for Multiple Image Slider */}
         <ImageSlider 
           imageString={news.featured_image} 
           headline={news.headline}
@@ -80,7 +88,6 @@ export default async function NewsDetailPage({ params }) {
              <ShareButtons url={shareUrl} title={news.headline} />
           </div>
 
-          {/* DYNAMIC POINTS & HEADINGS */}
           <div className="space-y-4 mb-8">
             {news.points?.map((point, idx) => {
               if (point.startsWith('[H]')) {
@@ -100,7 +107,6 @@ export default async function NewsDetailPage({ params }) {
             })}
           </div>
 
-          {/* VIDEO SECTION */}
           {news.video_url && (
             <div className="mb-8">
               <h2 className="text-xl font-bold font-yantramanav text-gray-900 mb-4 flex items-center gap-2">
@@ -115,7 +121,6 @@ export default async function NewsDetailPage({ params }) {
             </div>
           )}
 
-          {/* Bottom Action Bar */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-8 border-t border-gray-100 pt-6">
             <Link href="/contact" className="flex-1 bg-brand-secondary text-white text-xs md:text-sm font-yantramanav py-3 rounded text-center hover:bg-brand-primary transition-colors shadow-sm">
               सूचना सुझाव व जनहित के लिए संपर्क करें
