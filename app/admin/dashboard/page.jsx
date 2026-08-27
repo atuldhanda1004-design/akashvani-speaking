@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { FileText, Plus, LogOut, Trash2, Edit, IndianRupee, Users } from 'lucide-react'
+import { FileText, Plus, LogOut, Trash2, Edit, IndianRupee, Users, Clock } from 'lucide-react'
 import Logo from '@/components/Logo'
 import { supabase, signOut, getCurrentUser, isSupabaseConfigured, getReporters, updatePayout } from '@/lib/supabase'
 
@@ -12,17 +12,19 @@ export default function AdminDashboard() {
   const [newsList, setNewsList] = useState([])
   const [reporters, setReporters] = useState([])
   const [stats, setStats] = useState({ total: 0, pending: 0 })
+  const [loading, setLoading] = useState(true)
 
   const fetchDashboardData = async (currentUser) => {
-    if (!isSupabaseConfigured()) return
+    if (!isSupabaseConfigured()) {
+      setLoading(false)
+      return
+    }
     
-    const isAdmin = currentUser.role === 'admin'
+    const isAdmin = currentUser?.role === 'admin'
 
-    // Fetch News
     let query = supabase.from('news').select('id, headline, slug, status, published_at').order('published_at', { ascending: false })
     
-    // Reporter sees ONLY their news, Admin sees all
-    if (!isAdmin) {
+    if (!isAdmin && currentUser?.id) {
       query = query.eq('reporter_id', currentUser.id)
     }
 
@@ -35,17 +37,20 @@ export default function AdminDashboard() {
       })
     }
 
-    // If Admin, fetch all reporters for payout management
     if (isAdmin) {
       const reps = await getReporters()
       setReporters(reps)
     }
+    setLoading(false)
   }
 
   useEffect(() => {
     async function init() {
       const u = await getCurrentUser()
-      if (!u) { router.push('/admin/login'); return }
+      if (!u) { 
+        router.push('/admin/login')
+        return 
+      }
       setUser(u)
       await fetchDashboardData(u)
     }
@@ -59,7 +64,9 @@ export default function AdminDashboard() {
 
   const handleDelete = async (id) => {
     if (window.confirm('क्या आप सच में इस खबर को डिलीट करना चाहते हैं?')) {
-      await supabase.from('news').delete().eq('id', id)
+      if (supabase) {
+        await supabase.from('news').delete().eq('id', id)
+      }
       fetchDashboardData(user)
     }
   }
@@ -72,14 +79,14 @@ export default function AdminDashboard() {
         alert('Payout अपडेट हो गया!')
         fetchDashboardData(user)
       } else {
-        alert('एरर!')
+        alert('अपडेट करने में एरर!')
       }
     }
   }
 
-  if (!user) return <div className="p-10 text-center">Loading...</div>
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-brand-primary font-yantramanav">लोड हो रहा है...</div>
 
-  const isAdmin = user.role === 'admin'
+  const isAdmin = user?.role === 'admin'
 
   return (
     <div className="min-h-screen bg-brand-background pb-10">
@@ -89,10 +96,10 @@ export default function AdminDashboard() {
             <Logo size="sm" />
             <div>
               <h1 className="font-poppins font-bold text-sm">Dashboard</h1>
-              <p className="text-[10px]">{isAdmin ? 'Admin Panel' : 'Reporter Panel'}</p>
+              <p className="text-[10px] text-white/70">{isAdmin ? 'Main Admin Panel' : 'Reporter Panel'}</p>
             </div>
           </div>
-          <button onClick={handleLogout} className="flex items-center gap-1 text-white/80 hover:text-white text-xs font-poppins">
+          <button onClick={handleLogout} className="flex items-center gap-1 text-white/80 hover:text-white text-xs font-poppins bg-white/10 px-3 py-1.5 rounded-lg">
             <LogOut className="w-4 h-4" /> लॉगआउट
           </button>
         </div>
@@ -104,10 +111,10 @@ export default function AdminDashboard() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <div>
             <h2 className="text-xl font-bold font-yantramanav text-gray-900">
-              नमस्ते, {user.full_name || user.email?.split('@')[0]}
+              नमस्ते, {user?.full_name || user?.email?.split('@')[0]}
             </h2>
             <p className="text-sm text-gray-500 font-poppins mt-1">
-              Role: <span className="font-semibold text-brand-primary uppercase">{user.role}</span>
+              Role: <span className="font-semibold text-brand-primary uppercase">{user?.role || 'User'}</span>
             </p>
           </div>
           <Link href="/admin/news/new" className="bg-brand-primary text-white px-5 py-2.5 rounded-lg font-poppins font-semibold text-sm flex items-center gap-2 hover:bg-brand-secondary transition-all shadow-md">
@@ -126,19 +133,17 @@ export default function AdminDashboard() {
             <div><p className="text-gray-500 text-sm">पेंडिंग खबरें</p><h3 className="text-2xl font-bold">{stats.pending}</h3></div>
           </div>
 
-          {/* PAYOUT SECTION */}
           {!isAdmin && (
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-green-200 flex items-center gap-4">
               <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center"><IndianRupee /></div>
               <div>
                 <p className="text-gray-500 text-sm">आपकी कुल कमाई</p>
-                <h3 className="text-2xl font-bold text-green-700">₹ {user.payout_balance || '0'}</h3>
+                <h3 className="text-2xl font-bold text-green-700">₹ {user?.payout_balance || '0'}</h3>
               </div>
             </div>
           )}
         </div>
 
-        {/* FOR ADMIN ONLY: Manage Reporters Payout */}
         {isAdmin && reporters.length > 0 && (
           <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
             <h3 className="text-lg font-bold font-poppins text-gray-900 mb-4 flex items-center gap-2">
@@ -173,7 +178,6 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* News List */}
         <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
           <h3 className="text-lg font-bold font-yantramanav text-gray-900 mb-4">
             {isAdmin ? 'सभी रिपोर्टर्स की खबरें' : 'आपकी डाली गई खबरें'}
@@ -206,6 +210,7 @@ export default function AdminDashboard() {
             ))}
           </div>
         </div>
+
       </div>
     </div>
   )
