@@ -29,7 +29,9 @@ export default function EditNewsPage({ params }) {
     video_url: '',
     video_type: 'youtube',
     status: 'pending',
+    live_updates: [{ time: '', text: '' }], // Live update state added here
   })
+  
   const [existingImageString, setExistingImageString] = useState('')
   const [newImageFiles, setNewImageFiles] = useState([])
   const [newPreviews, setNewPreviews] = useState([])
@@ -82,6 +84,8 @@ export default function EditNewsPage({ params }) {
         video_url: newsItem.video_url || '',
         video_type: newsItem.video_type || 'youtube',
         status: newsItem.status || 'pending',
+        // Fetch existing live updates safely
+        live_updates: Array.isArray(newsItem.live_updates) && newsItem.live_updates.length > 0 ? newsItem.live_updates : [{ time: '', text: '' }],
       })
       setExistingImageString(newsItem.featured_image || '')
       setIsLoading(false)
@@ -90,11 +94,10 @@ export default function EditNewsPage({ params }) {
     fetchNews()
   }, [id, router])
 
+  // Headings & Points Handlers
   const addPoint = () => setFormData((p) => ({ ...p, points: [...p.points, ''] }))
   const addHeading = () => setFormData((p) => ({ ...p, points: [...p.points, '[H] '] }))
-  const removePoint = (i) =>
-    setFormData((p) => ({ ...p, points: p.points.filter((_, idx) => idx !== i) }))
-
+  const removePoint = (i) => setFormData((p) => ({ ...p, points: p.points.filter((_, idx) => idx !== i) }))
   const updatePoint = (i, value, isHeading) => {
     setFormData((p) => ({
       ...p,
@@ -105,6 +108,14 @@ export default function EditNewsPage({ params }) {
       }),
     }))
   }
+
+  // Live Updates Handlers
+  const addLiveUpdate = () => setFormData((p) => ({ ...p, live_updates: [...(p.live_updates || []), { time: '', text: '' }] }))
+  const removeLiveUpdate = (i) => setFormData((p) => ({ ...p, live_updates: p.live_updates.filter((_, idx) => idx !== i) }))
+  const updateLiveUpdate = (i, field, value) => setFormData((p) => ({
+    ...p,
+    live_updates: p.live_updates.map((u, idx) => idx === i ? { ...u, [field]: value } : u)
+  }))
 
   const handleNewImages = (e) => {
     const files = Array.from(e.target.files || [])
@@ -124,6 +135,11 @@ export default function EditNewsPage({ params }) {
     try {
       const filteredPoints = formData.points.map((p) => p.trim()).filter((p) => p && p !== '[H]')
       if (!filteredPoints.length) throw new Error('Points जरूरी हैं')
+
+      // Live updates filter
+      const cleanedLive = (formData.is_trending || formData.is_breaking) 
+        ? (formData.live_updates || []).map((u) => ({ time: (u.time || '').trim(), text: (u.text || '').trim() })).filter((u) => u.time && u.text) 
+        : []
 
       let imageString = existingImageString
       if (newImageFiles.length > 0) {
@@ -147,6 +163,7 @@ export default function EditNewsPage({ params }) {
         location: formData.location.trim() || null,
         is_trending: formData.is_trending,
         is_breaking: formData.is_breaking,
+        live_updates: cleanedLive,
         video_url: formData.video_url.trim() || null,
         video_type: formData.video_url.trim() ? formData.video_type : null,
       }
@@ -179,10 +196,7 @@ export default function EditNewsPage({ params }) {
     <div className="min-h-screen bg-brand-background pb-10">
       <header className="bg-brand-primary text-white shadow-lg">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href="/admin/dashboard" className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-poppins">
-            <ArrowLeft className="w-4 h-4" />
-            डैशबोर्ड
-          </Link>
+          <Link href="/admin/dashboard" className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-poppins"><ArrowLeft className="w-4 h-4" /> डैशबोर्ड</Link>
           <h1 className="font-poppins font-bold text-sm">खबर एडिट करें</h1>
           <div className="w-20" />
         </div>
@@ -192,25 +206,15 @@ export default function EditNewsPage({ params }) {
         <form onSubmit={handleUpdate} className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
+              
               <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
                 <label className="block text-sm font-poppins font-semibold text-gray-700 mb-2">हेडलाइन *</label>
-                <input
-                  type="text"
-                  value={formData.headline}
-                  onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
-                  required
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl font-yantramanav text-lg outline-none focus:border-brand-primary"
-                />
+                <input type="text" value={formData.headline} onChange={(e) => setFormData({ ...formData, headline: e.target.value })} required className="w-full px-4 py-3 border border-gray-200 rounded-xl font-yantramanav text-lg outline-none focus:border-brand-primary" />
               </div>
 
               <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
                 <label className="block text-sm font-poppins font-semibold text-gray-700 mb-2">सब-हेडलाइन</label>
-                <textarea
-                  value={formData.subheadline}
-                  onChange={(e) => setFormData({ ...formData, subheadline: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl font-yantramanav outline-none focus:border-brand-primary resize-none"
-                />
+                <textarea value={formData.subheadline} onChange={(e) => setFormData({ ...formData, subheadline: e.target.value })} rows={3} className="w-full px-4 py-3 border border-gray-200 rounded-xl font-yantramanav outline-none focus:border-brand-primary resize-none" />
               </div>
 
               <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
@@ -221,127 +225,92 @@ export default function EditNewsPage({ params }) {
                     const display = isHeading ? point.replace(/^\[H\]\s?/, '') : point
                     return (
                       <div key={idx} className="flex items-start gap-2">
-                        <span className={`w-7 h-7 rounded flex items-center justify-center text-xs font-bold shrink-0 mt-1 ${isHeading ? 'bg-brand-primary text-white' : 'bg-brand-primary/10 text-brand-primary'}`}>
-                          {isHeading ? 'H' : idx + 1}
-                        </span>
-                        <textarea
-                          value={display}
-                          onChange={(e) => updatePoint(idx, e.target.value, isHeading)}
-                          rows={isHeading ? 1 : 2}
-                          className={`flex-1 px-4 py-2 border rounded-xl outline-none ${isHeading ? 'font-bold border-brand-primary/40 text-brand-primary' : 'border-gray-200 text-sm'}`}
-                        />
-                        {formData.points.length > 1 ? (
-                          <button type="button" onClick={() => removePoint(idx)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg mt-1">
-                            <X className="w-4 h-4" />
-                          </button>
-                        ) : null}
+                        <span className={`w-7 h-7 rounded flex items-center justify-center text-xs font-bold shrink-0 mt-1 ${isHeading ? 'bg-brand-primary text-white' : 'bg-brand-primary/10 text-brand-primary'}`}>{isHeading ? 'H' : idx + 1}</span>
+                        <textarea value={display} onChange={(e) => updatePoint(idx, e.target.value, isHeading)} rows={isHeading ? 1 : 2} className={`flex-1 px-4 py-2 border rounded-xl outline-none ${isHeading ? 'font-bold border-brand-primary/40 text-brand-primary' : 'border-gray-200 text-sm'}`} />
+                        {formData.points.length > 1 ? <button type="button" onClick={() => removePoint(idx)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg mt-1"><X className="w-4 h-4" /></button> : null}
                       </div>
                     )
                   })}
                 </div>
                 <div className="flex flex-wrap gap-3 mt-4">
-                  <button type="button" onClick={addPoint} className="px-3 py-2 border-2 border-brand-primary text-brand-primary rounded-lg text-sm font-semibold inline-flex items-center gap-2">
-                    <Plus className="w-4 h-4" /> बुलेट
-                  </button>
-                  <button type="button" onClick={addHeading} className="px-3 py-2 bg-gray-800 text-white rounded-lg text-sm font-semibold inline-flex items-center gap-2">
-                    <Plus className="w-4 h-4" /> हेडिंग
-                  </button>
+                  <button type="button" onClick={addPoint} className="px-3 py-2 border-2 border-brand-primary text-brand-primary rounded-lg text-sm font-semibold inline-flex items-center gap-2"><Plus className="w-4 h-4" /> बुलेट</button>
+                  <button type="button" onClick={addHeading} className="px-3 py-2 bg-gray-800 text-white rounded-lg text-sm font-semibold inline-flex items-center gap-2"><Plus className="w-4 h-4" /> हेडिंग</button>
                 </div>
               </div>
+
+              {/* LIVE UPDATES SECTION */}
+              {(formData.is_trending || formData.is_breaking) && (
+                <div className="bg-red-50/50 rounded-2xl shadow-sm p-6 border border-red-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-2 h-2 bg-brand-red rounded-full animate-pulse" />
+                    <label className="text-sm font-poppins font-semibold text-brand-red">लाइव अपडेट्स</label>
+                  </div>
+                  <div className="space-y-3">
+                    {(formData.live_updates || []).map((u, idx) => (
+                      <div key={idx} className="flex flex-col sm:flex-row gap-2 items-start border border-gray-100 rounded-xl p-3 bg-white">
+                        <input type="text" value={u.time} onChange={(e) => updateLiveUpdate(idx, 'time', e.target.value)} placeholder="3:25 PM" className="w-full sm:w-28 px-3 py-2 border rounded-lg text-xs" />
+                        <textarea value={u.text} onChange={(e) => updateLiveUpdate(idx, 'text', e.target.value)} rows={2} className="flex-1 w-full px-3 py-2 border rounded-lg text-sm resize-none" />
+                        {(formData.live_updates || []).length > 1 && <button type="button" onClick={() => removeLiveUpdate(idx)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg text-xs shrink-0"><X className="w-4 h-4" /></button>}
+                      </div>
+                    ))}
+                  </div>
+                  <button type="button" onClick={addLiveUpdate} className="mt-3 text-sm text-brand-red">+ और जोड़ें</button>
+                </div>
+              )}
 
               <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
                 <label className="block text-sm font-poppins font-semibold text-gray-700 mb-3">मौजूदा फोटो</label>
                 {existingImages.length ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
                     {existingImages.map((src, i) => (
-                      <div key={i} className="h-24 rounded-xl overflow-hidden bg-gray-100">
-                        <img src={src} alt="" className="w-full h-full object-cover" />
-                      </div>
+                      <div key={i} className="h-24 rounded-xl overflow-hidden bg-gray-100"><img src={src} alt="" className="w-full h-full object-cover" /></div>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-sm text-gray-400 mb-3">कोई पुरानी फोटो नहीं</p>
-                )}
-
+                ) : <p className="text-sm text-gray-400 mb-3">कोई पुरानी फोटो नहीं</p>}
                 <label className="block text-sm font-poppins font-semibold text-gray-700 mb-2">नई फोटो जोड़ें (optional)</label>
                 <input type="file" accept="image/*" multiple onChange={handleNewImages} className="w-full border p-2 rounded-xl" />
                 {newPreviews.length > 0 ? (
                   <div className="grid grid-cols-3 gap-2 mt-3">
-                    {newPreviews.map((src, i) => (
-                      <img key={i} src={src} alt="" className="h-20 w-full object-cover rounded-lg" />
-                    ))}
+                    {newPreviews.map((src, i) => <img key={i} src={src} alt="" className="h-20 w-full object-cover rounded-lg" />)}
                   </div>
                 ) : null}
               </div>
 
               <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
                 <label className="block text-sm font-poppins font-semibold text-gray-700 mb-2">YouTube URL</label>
-                <input
-                  type="url"
-                  value={formData.video_url}
-                  onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-                  placeholder="https://youtube.com/watch?v=..."
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm"
-                />
+                <input type="url" value={formData.video_url} onChange={(e) => setFormData({ ...formData, video_url: e.target.value })} placeholder="https://youtube.com/watch?v=..." className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm" />
               </div>
             </div>
 
             <div className="space-y-6">
               <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
                 <label className="block text-sm font-poppins font-semibold text-gray-700 mb-2">कैटेगरी</label>
-                <select
-                  value={formData.category_id}
-                  onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white"
-                >
+                <select value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white">
                   <option value="">चुनें</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
+                  {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
 
               <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
                 <label className="block text-sm font-poppins font-semibold text-gray-700 mb-2">लोकेशन</label>
-                <input
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm"
-                />
+                <input type="text" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm" />
               </div>
 
-              <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 space-y-3">
-                <label className="flex items-center gap-3">
-                  <input type="checkbox" checked={formData.is_trending} onChange={(e) => setFormData({ ...formData, is_trending: e.target.checked })} className="w-5 h-5" />
-                  <span className="text-sm font-medium">Trending</span>
-                </label>
-                <label className="flex items-center gap-3">
-                  <input type="checkbox" checked={formData.is_breaking} onChange={(e) => setFormData({ ...formData, is_breaking: e.target.checked })} className="w-5 h-5" />
-                  <span className="text-sm font-medium">Breaking / Live</span>
-                </label>
+              <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 space-y-4">
+                <label className="flex items-center gap-3"><input type="checkbox" checked={formData.is_trending} onChange={(e) => setFormData({ ...formData, is_trending: e.target.checked })} className="w-5 h-5" /> <span className="text-sm font-medium">Trending News</span></label>
+                <label className="flex items-center gap-3"><input type="checkbox" checked={formData.is_breaking} onChange={(e) => setFormData({ ...formData, is_breaking: e.target.checked })} className="w-5 h-5" /> <span className="text-sm font-medium">Breaking / Live</span></label>
               </div>
 
               <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
                 <label className="block text-sm font-poppins font-semibold text-gray-700 mb-2">Status (Admin)</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white"
-                >
+                <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white">
                   <option value="pending">Pending</option>
                   <option value="approved">Approved (Live)</option>
                   <option value="rejected">Rejected</option>
                 </select>
               </div>
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-3 bg-brand-primary text-white rounded-xl font-poppins font-semibold text-sm flex items-center justify-center gap-2 hover:bg-brand-secondary disabled:opacity-50"
-              >
-                {isSubmitting ? 'सेव हो रहा है...' : (<><Save className="w-4 h-4" /> सेव / Update</>)}
-              </button>
+              <button type="submit" disabled={isSubmitting} className="w-full py-3 bg-brand-primary text-white rounded-xl font-bold">{isSubmitting ? 'सेव हो रहा है...' : <><Save className="w-4 h-4 inline" /> सेव / Update</>}</button>
             </div>
           </div>
         </form>

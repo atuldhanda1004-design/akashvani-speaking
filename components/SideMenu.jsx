@@ -6,6 +6,7 @@ import Logo from './Logo'
 import { dummyCategories } from '@/lib/dummyData'
 import { SITE_CONFIG } from '@/lib/constants'
 
+
 export default function SideMenu({ isOpen, onClose }) {
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : ''
@@ -115,20 +116,20 @@ export default function SideMenu({ isOpen, onClose }) {
             ))}
           </nav>
 
-          <div className="mx-6 mt-4 p-4 bg-gradient-to-r from-brand-navy/5 to-brand-navyLight/5 rounded-xl">
-            <p className="text-[11px] text-gray-400 font-poppins text-center">
-              Developed by
-            </p>
-            <p className="text-[13px] text-brand-navy font-poppins font-semibold text-center mt-0.5">
-              {SITE_CONFIG.developer.name}
-            </p>
-            <a
-              href={`tel:${SITE_CONFIG.developer.phone}`}
-              className="block text-[11px] text-gray-500 font-poppins text-center mt-1 hover:text-brand-navy transition-colors"
-            >
-              📞 {SITE_CONFIG.developer.phone}
-            </a>
-          </div>
+          <div className="mx-6 mt-4 p-4 bg-gradient-to-r from-brand-primary/5 to-brand-secondary/5 rounded-xl">
+  <p className="text-[11px] text-gray-400 font-poppins text-center">Developed by</p>
+  <p className="text-[13px] text-brand-primary font-poppins font-semibold text-center mt-0.5">
+    {SITE_CONFIG.developer.name}
+  </p>
+  <a
+    href={SITE_CONFIG.developer.link}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="block text-[11px] text-brand-primary font-poppins text-center mt-1 hover:underline break-all"
+  >
+    {SITE_CONFIG.developer.link}
+  </a>
+</div>
         </div>
       </div>
     </>

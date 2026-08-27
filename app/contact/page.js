@@ -56,22 +56,22 @@ export default function ContactPage() {
             </div>
 
             <div className="flex items-start gap-4 p-5 bg-brand-background rounded-xl">
-              <div className="w-12 h-12 bg-brand-primary/10 rounded-xl flex items-center justify-center shrink-0">
-                <Phone className="w-6 h-6 text-brand-primary" />
-              </div>
-              <div>
-                <h3 className="font-poppins font-semibold text-gray-900 text-sm">Developer</h3>
-                <p className="text-gray-600 font-poppins text-sm mt-1">
-                  {SITE_CONFIG.developer.name}
-                </p>
-                <a
-                  href={`tel:${SITE_CONFIG.developer.phone}`}
-                  className="text-brand-primary font-poppins font-bold text-sm mt-1 block hover:underline"
-                >
-                  📞 {SITE_CONFIG.developer.phone}
-                </a>
-              </div>
-            </div>
+  <div className="w-12 h-12 bg-brand-primary/10 rounded-xl flex items-center justify-center shrink-0">
+    <Globe className="w-6 h-6 text-brand-primary" />
+  </div>
+  <div>
+    <h3 className="font-poppins font-semibold text-gray-900 text-sm">Developer</h3>
+    <p className="text-gray-600 font-poppins text-sm mt-1">{SITE_CONFIG.developer.name}</p>
+    <a
+      href={SITE_CONFIG.developer.link}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-brand-primary font-poppins font-semibold text-sm mt-1 block hover:underline break-all"
+    >
+      {SITE_CONFIG.developer.link}
+    </a>
+  </div>
+</div>
 
             <div className="flex items-start gap-4 p-5 bg-brand-background rounded-xl">
               <div className="w-12 h-12 bg-brand-primary/10 rounded-xl flex items-center justify-center shrink-0">

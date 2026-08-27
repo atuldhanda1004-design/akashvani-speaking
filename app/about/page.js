@@ -13,12 +13,12 @@ export default function AboutPage() {
     <>
       <Header />
       <main className="max-w-4xl mx-auto px-4 py-10">
-        <div className="bg-white rounded-2xl shadow-sm p-8 md:p-12 animate-fade-in">
+        <div className="bg-white rounded-2xl shadow-sm p-8 md:p-12 border border-gray-100">
           <div className="text-center mb-10">
             <div className="flex justify-center mb-4">
               <Logo size="xl" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold font-yantramanav text-brand-navy mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold font-yantramanav text-brand-primary mb-2">
               {SITE_CONFIG.name}
             </h1>
             <p className="text-gray-500 font-yantramanav text-lg">{SITE_CONFIG.tagline}</p>
@@ -34,19 +34,23 @@ export default function AboutPage() {
               से ताज़ा खबरें, लाइव अपडेट, और ब्रेकिंग न्यूज़ कवर करते हैं।
             </p>
             <p>
-              हमारी टीम अनुभवी पत्रकारों से बनी है जो निष्पक्ष और ईमानदार पत्रकारिता में विश्वास रखते हैं।
-              हम technology का उपयोग करके खबरें तेज़ी से आप तक पहुंचाते हैं।
+              हमारी टीम अनुभवी पत्रकारों से बनी है जो निष्पक्ष और ईमानदार पत्रकारिता में विश्वास
+              रखते हैं। हम technology का उपयोग करके खबरें तेज़ी से आप तक पहुंचाते हैं।
             </p>
           </div>
 
-          <div className="mt-10 p-6 bg-brand-lightGray rounded-xl text-center">
+          <div className="mt-10 p-6 bg-brand-background rounded-xl text-center">
             <p className="text-sm text-gray-500 font-poppins">Website Developed by</p>
-            <p className="text-lg font-bold text-brand-navy font-poppins mt-1">
+            <p className="text-lg font-bold text-brand-primary font-poppins mt-1">
               {SITE_CONFIG.developer.name}
             </p>
-            <a href={`tel:${SITE_CONFIG.developer.phone}`}
-               className="text-sm text-gray-500 font-poppins mt-1 hover:text-brand-navy transition-colors block">
-              📞 {SITE_CONFIG.developer.phone}
+            <a
+              href={SITE_CONFIG.developer.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-2 text-sm font-poppins text-brand-primary hover:underline break-all"
+            >
+              {SITE_CONFIG.developer.link}
             </a>
           </div>
         </div>
