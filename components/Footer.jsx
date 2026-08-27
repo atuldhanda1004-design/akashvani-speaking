@@ -35,6 +35,7 @@ export default function Footer() {
                 { label: 'नियम एवं शर्तें', href: '/terms' },
                 { label: 'शॉर्ट न्यूज़', href: '/short-news' },
                 { label: 'सभी खबरें', href: '/all-news' },
+                { label: 'रिपोर्टर लॉगिन', href: '/admin/login' },
               ].map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-white/60 text-sm font-yantramanav hover:text-white transition-colors">

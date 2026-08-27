@@ -1,13 +1,12 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { Search, Menu, Calendar } from 'lucide-react'
+import { Search, Menu, Pencil } from 'lucide-react'
 import Logo from './Logo'
 import SideMenu from './SideMenu'
 import SearchModal from './SearchModal'
 import LiveAudience from './LiveAudience'
-import { Suspense } from 'react'
 
 function HeaderInner() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -54,7 +53,7 @@ function HeaderInner() {
       <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${isScrolled ? 'shadow-xl' : ''}`}>
         <div className="bg-brand-primary">
           <div className="max-w-7xl mx-auto px-3 h-14 flex items-center justify-between">
-            <button onClick={() => setIsSideMenuOpen(true)} className="text-white p-2 hover:bg-white/10 rounded-lg" aria-label="Menu">
+            <button onClick={() => setIsSideMenuOpen(true)} className="text-white p-2 hover:bg-white/10 rounded-lg">
               <Menu className="w-6 h-6" />
             </button>
             <Link href="/" className="flex items-center gap-2 min-w-0">
@@ -64,23 +63,21 @@ function HeaderInner() {
                 <p className="text-white/70 text-[9px] sm:text-[10px] font-yantramanav leading-tight truncate">ईमानदार सोच - सच्ची खबरें</p>
               </div>
             </Link>
-            <button onClick={() => setIsSearchOpen(true)} className="text-white p-2 hover:bg-white/10 rounded-lg" aria-label="Search">
+            <button onClick={() => setIsSearchOpen(true)} className="text-white p-2 hover:bg-white/10 rounded-lg">
               <Search className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Date bar - compact, no overflow */}
+        {/* Small Date Bar with Pencil Icon */}
         <div className="bg-brand-secondary h-8 flex items-center border-t border-white/10 overflow-hidden">
           <div className="max-w-7xl mx-auto px-3 w-full flex items-center justify-between gap-2 min-w-0">
             <div
               onClick={triggerDatePicker}
-              className="flex items-center gap-1 text-white/90 hover:text-white text-[9px] sm:text-[10px] font-yantramanav cursor-pointer bg-white/10 hover:bg-white/20 px-1.5 py-0.5 rounded transition-all select-none min-w-0 flex-1 max-w-[55%]"
-              title="तारीख बदलें"
+              className="flex items-center gap-1.5 text-white/90 hover:text-white text-[9px] sm:text-[10px] font-yantramanav cursor-pointer bg-white/10 hover:bg-white/20 px-2 py-0.5 rounded transition-all select-none min-w-0 flex-1 max-w-[65%]"
             >
-              <Calendar className="w-3 h-3 shrink-0" />
+              <Pencil className="w-3 h-3 shrink-0 text-white/80" />
               <span className="truncate">{displayDate || 'तारीख...'}</span>
-              <span className="text-[8px] bg-white/20 px-1 rounded shrink-0">📅</span>
             </div>
             <input ref={dateInputRef} type="date" onChange={handleDateChange} className="sr-only" tabIndex={-1} />
             <div className="shrink-0">
@@ -89,32 +86,14 @@ function HeaderInner() {
           </div>
         </div>
 
-        {/* Tabs - only on homepage */}
         {showTabs && (
           <div className="bg-brand-background border-b border-gray-200">
             <div className="max-w-7xl mx-auto px-3 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
-              <Link
-                href="/?tab=latest"
-                scroll={false}
-                className={`shrink-0 px-3 sm:px-4 py-1.5 rounded-md font-poppins font-semibold text-xs sm:text-sm transition-all shadow-sm ${
-                  activeTab === 'latest'
-                    ? 'bg-brand-primary text-white'
-                    : 'bg-white text-brand-primary border border-brand-primary/30'
-                }`}
-              >
+              <Link href="/?tab=latest" scroll={false} className={`shrink-0 px-3 sm:px-4 py-1.5 rounded-md font-poppins font-semibold text-xs sm:text-sm transition-all shadow-sm ${activeTab === 'latest' ? 'bg-brand-primary text-white' : 'bg-white text-brand-primary border border-brand-primary/30'}`}>
                 Haryana Latest News
               </Link>
-              <Link
-                href="/?tab=live"
-                scroll={false}
-                className={`shrink-0 px-3 sm:px-4 py-1.5 rounded-md font-poppins font-semibold text-xs sm:text-sm transition-all flex items-center gap-2 shadow-sm ${
-                  activeTab === 'live'
-                    ? 'bg-brand-primary text-white'
-                    : 'bg-white text-brand-primary border border-brand-primary/30'
-                }`}
-              >
-                Live Updates
-                <span className={`w-2 h-2 rounded-full animate-pulse-red ${activeTab === 'live' ? 'bg-white' : 'bg-brand-red'}`} />
+              <Link href="/?tab=live" scroll={false} className={`shrink-0 px-3 sm:px-4 py-1.5 rounded-md font-poppins font-semibold text-xs sm:text-sm transition-all flex items-center gap-2 shadow-sm ${activeTab === 'live' ? 'bg-brand-primary text-white' : 'bg-white text-brand-primary border border-brand-primary/30'}`}>
+                Live Updates <span className={`w-2 h-2 rounded-full animate-pulse-red ${activeTab === 'live' ? 'bg-white' : 'bg-brand-red'}`} />
               </Link>
             </div>
           </div>
@@ -122,7 +101,6 @@ function HeaderInner() {
       </header>
 
       <div className={showTabs ? 'h-[126px]' : 'h-[88px]'} />
-
       <SideMenu isOpen={isSideMenuOpen} onClose={() => setIsSideMenuOpen(false)} />
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
@@ -130,9 +108,5 @@ function HeaderInner() {
 }
 
 export default function Header() {
-  return (
-    <Suspense fallback={<div className="h-[126px] bg-brand-primary" />}>
-      <HeaderInner />
-    </Suspense>
-  )
+  return <Suspense fallback={<div className="h-[126px] bg-brand-primary" />}><HeaderInner /></Suspense>
 }

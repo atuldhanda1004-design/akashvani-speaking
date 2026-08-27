@@ -1,4 +1,5 @@
 'use client'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
@@ -23,8 +24,7 @@ export default function AdminLogin() {
         await signIn(email, password)
         router.push('/admin/dashboard')
       } else {
-        // Demo mode
-        await new Promise((r) => setTimeout(r, 1000))
+        await new Promise((r) => setTimeout(r, 800))
         if (email === 'admin@akashvanispeaking.news' && password === 'admin123') {
           router.push('/admin/dashboard')
         } else {
@@ -39,70 +39,81 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-navyDark flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-10 animate-scale-in">
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <Logo size="lg" />
-            </div>
-            <h1 className="text-2xl font-bold font-poppins text-gray-900">Admin Panel</h1>
-            <p className="text-gray-400 text-sm font-poppins mt-1">Akashvani Speaking</p>
+    <div className="min-h-screen bg-brand-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 md:p-10 border border-gray-100">
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <Logo size="lg" />
+          </div>
+          <h1 className="text-2xl font-bold font-poppins text-brand-primary">Admin / Reporter Login</h1>
+          <p className="text-gray-400 text-sm font-poppins mt-1">Akashvani Speaking</p>
+        </div>
+
+        {error ? (
+          <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-yantramanav text-center">
+            {error}
+          </div>
+        ) : null}
+
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div>
+            <label className="block text-sm font-poppins font-semibold text-gray-700 mb-1.5">
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="email@example.com"
+              required
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl font-poppins text-sm outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 bg-gray-50"
+            />
           </div>
 
-          {error && (
-            <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-yantramanav text-center animate-slide-down">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">Email</label>
+          <div>
+            <label className="block text-sm font-poppins font-semibold text-gray-700 mb-1.5">
+              Password
+            </label>
+            <div className="relative">
               <input
-                type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@akashvanispeaking.news" required
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl font-poppins text-sm outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20 transition-all"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl font-poppins text-sm outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 bg-gray-50"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-primary"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
+          </div>
 
-            <div>
-              <label className="block text-sm font-poppins font-medium text-gray-700 mb-1.5">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password} onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••" required
-                  className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl font-poppins text-sm outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/20 transition-all"
-                />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-3.5 bg-brand-primary text-white rounded-xl font-poppins font-bold text-sm flex items-center justify-center gap-2 hover:bg-brand-secondary transition-all disabled:opacity-70 shadow-md"
+          >
+            {isLoading ? (
+              'लॉगिन हो रहा है...'
+            ) : (
+              <>
+                <LogIn className="w-5 h-5" />
+                लॉगिन करें
+              </>
+            )}
+          </button>
+        </form>
 
-            <button
-              type="submit" disabled={isLoading}
-              className="w-full py-3 bg-brand-navy text-white rounded-xl font-poppins font-semibold text-sm flex items-center justify-center gap-2 hover:bg-brand-navyDark transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>लॉगिन हो रहा है...</span>
-                </>
-              ) : (
-                <><LogIn className="w-4 h-4" /><span>लॉगिन करें</span></>
-              )}
-            </button>
-          </form>
-
-          {!isSupabaseConfigured() && (
-            <p className="text-center text-xs text-gray-400 font-poppins mt-6">
-              Demo: admin@akashvanispeaking.news / admin123
-            </p>
-          )}
-        </div>
+        {!isSupabaseConfigured() ? (
+          <p className="text-center text-xs text-gray-400 font-poppins mt-6">
+            Demo: admin@akashvanispeaking.news / admin123
+          </p>
+        ) : null}
       </div>
     </div>
   )

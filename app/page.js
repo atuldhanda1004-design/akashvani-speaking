@@ -2,6 +2,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import TrendingNews from '@/components/TrendingNews'
 import LatestNews from '@/components/LatestNews'
+import VideoNews from '@/components/VideoNews'
 import LiveUpdatesBar from '@/components/LiveUpdatesBar'
 import ScrollToTop from '@/components/ScrollToTop'
 import { getNews, getLiveUpdates } from '@/lib/supabase'
@@ -19,16 +20,10 @@ async function fetchLatest() {
   return data?.length ? data : dummyLatestNews
 }
 
-async function fetchLiveNewsCards() {
-  // 4-5 latest news that are breaking / live updates style
-  const breaking = await getNews({ isBreaking: true, limit: 5 })
-  if (breaking?.length) return breaking
-
-  // fallback: trending with live_updates, or first 5 dummy trending
-  const trending = await getNews({ isTrending: true, limit: 5 })
-  if (trending?.length) return trending
-
-  return dummyTrendingNews.slice(0, 5)
+async function fetchVideoNews() {
+  const data = await getNews({ limit: 30 })
+  const all = data?.length ? data : [...dummyTrendingNews, ...dummyLatestNews]
+  return all.filter((n) => n.video_url)
 }
 
 async function fetchLiveList() {
@@ -50,55 +45,38 @@ async function fetchLiveList() {
 
 export default async function HomePage({ searchParams }) {
   const tab = searchParams?.tab || 'latest'
-
-  const [trending, latest, liveCards, liveList] = await Promise.all([
+  const [trending, latest, videoNews, liveList] = await Promise.all([
     fetchTrending(),
     fetchLatest(),
-    fetchLiveNewsCards(),
+    fetchVideoNews(),
     fetchLiveList(),
   ])
-
-  // Latest tab top carousel: live-update style news (4-5)
-  // Prefer liveCards; ensure max 5
-  const latestTabCarousel = (liveCards?.length ? liveCards : dummyTrendingNews).slice(0, 5)
 
   return (
     <>
       <Header />
-
       <main className="max-w-7xl mx-auto px-4 py-4 min-h-[50vh]">
         {tab === 'live' ? (
           <>
-            {/* Live Updates TAB: full trending carousel + live list */}
-            <section id="trending">
-              <TrendingNews
-                news={trending}
-                title="Trending / Live Update"
-              />
-            </section>
-            <section id="live" className="mt-6">
-              <LiveUpdatesBar updates={liveList} />
-            </section>
+            <TrendingNews
+              news={trending}
+              title="Trending / Live Updates"
+              layout="stacked"
+            />
+            <LiveUpdatesBar updates={liveList} />
           </>
         ) : (
           <>
-            {/* Haryana Latest News TAB */}
-            {/* 1) Top: same scroll/carousel UI as live updates — 4-5 live news */}
-            <section id="latest-live-scroll">
-              <TrendingNews
-                news={latestTabCarousel}
-                title="लाइव अपडेट"
-              />
-            </section>
-
-            {/* 2) Below: Latest news cards */}
-            <section id="latest" className="mt-8">
-              <LatestNews news={latest} />
-            </section>
+            <TrendingNews
+              news={(trending || []).slice(0, 5)}
+              title="Trending / Live Updates"
+              layout="carousel"
+            />
+            <LatestNews news={latest} />
+            <VideoNews news={videoNews} />
           </>
         )}
       </main>
-
       <Footer />
       <ScrollToTop />
     </>

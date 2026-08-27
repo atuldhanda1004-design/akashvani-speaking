@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, Fragment } from 'react'
 import Link from 'next/link'
-import { X, Home, Newspaper, TrendingUp, Zap, Info, Phone, FileText, ChevronRight, Shield } from 'lucide-react'
+import { X, Home, Newspaper, TrendingUp, Zap, Info, Phone, FileText, ChevronRight, UserCircle, Shield } from 'lucide-react'
 import Logo from './Logo'
 import { dummyCategories } from '@/lib/dummyData'
 import { SITE_CONFIG } from '@/lib/constants'
@@ -24,6 +24,7 @@ export default function SideMenu({ isOpen, onClose }) {
     { icon: Phone, label: 'संपर्क करें', href: '/contact' },
     { icon: Shield, label: 'प्राइवेसी पॉलिसी', href: '/privacy' },
     { icon: FileText, label: 'नियम एवं शर्तें', href: '/terms' },
+    { icon: UserCircle, label: 'रिपोर्टर / एडमिन लॉगिन', href: '/admin/login' },
   ]
 
   return (

@@ -1,133 +1,97 @@
 'use client'
-import { useState, useRef, useEffect } from 'react'
-import { ChevronUp, ChevronDown, Volume2, ArrowLeft } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { dummyShortNews } from '@/lib/dummyData'
+import { ArrowLeft } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import { WhatsAppIcon } from '@/components/SocialIcons'
-import { SITE_CONFIG } from '@/lib/constants'
-
-const gradients = [
-  'from-brand-navy to-brand-navyLight',
-  'from-indigo-600 to-purple-700',
-  'from-blue-700 to-cyan-600',
-  'from-slate-800 to-slate-600',
-  'from-violet-700 to-purple-500',
-]
+import { supabase } from '@/lib/supabase'
 
 export default function ShortNewsPage() {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [touchStart, setTouchStart] = useState(0)
+  const [videoNews, setVideoNews] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const containerRef = useRef(null)
 
-  const goNext = () => setCurrentIndex((p) => Math.min(p + 1, dummyShortNews.length - 1))
-  const goPrev = () => setCurrentIndex((p) => Math.max(p - 1, 0))
-
-  const handleTouchStart = (e) => setTouchStart(e.touches[0].clientY)
-  const handleTouchEnd = (e) => {
-    const diff = touchStart - e.changedTouches[0].clientY
-    if (Math.abs(diff) > 50) diff > 0 ? goNext() : goPrev()
-  }
-
-  const speakNews = (news) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(news.headline + '। ' + news.summary)
-    utterance.lang = 'hi-IN'
-    utterance.rate = 0.9
-    window.speechSynthesis.speak(utterance)
+  // YouTube URL से ID निकालने का फंक्शन
+  const getYouTubeId = (url) => {
+    try {
+      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
+      return url.match(regex)[1]
+    } catch { return null }
   }
 
   useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === 'ArrowDown') goNext()
-      if (e.key === 'ArrowUp') goPrev()
+    async function fetchVideos() {
+      if (supabase) {
+        const { data } = await supabase.from('news').select('*').not('video_url', 'is', null).order('published_at', { ascending: false })
+        if (data) {
+          const vids = data.filter(n => getYouTubeId(n.video_url))
+          setVideoNews(vids)
+        }
+      }
+      setIsLoading(false)
     }
-    window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
+    fetchVideos()
   }, [])
-
-  const currentNews = dummyShortNews[currentIndex]
-  const gradient = gradients[currentIndex % gradients.length]
 
   return (
     <>
       <Header />
+      <main className="bg-black min-h-screen">
+        <div className="max-w-md mx-auto h-[100dvh] relative overflow-hidden flex flex-col">
+          
+          {/* Top Bar */}
+          <div className="absolute top-0 left-0 right-0 z-50 p-4 bg-gradient-to-b from-black/80 to-transparent flex items-center justify-between">
+            <Link href="/" className="text-white hover:text-gray-300 transition-colors">
+              <ArrowLeft className="w-6 h-6" />
+            </Link>
+            <h2 className="text-white font-poppins font-bold">शॉर्ट वीडियो न्यूज़</h2>
+            <div className="w-6" />
+          </div>
 
-      <main className="max-w-lg mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-4">
-          <Link href="/" className="flex items-center gap-2 text-brand-navy font-poppins text-sm font-medium hover:underline group">
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            वापस
-          </Link>
-          <h2 className="text-lg font-bold font-poppins text-brand-navy">शॉर्ट न्यूज़</h2>
-          <span className="text-xs text-gray-400 font-poppins">
-            {currentIndex + 1}/{dummyShortNews.length}
-          </span>
-        </div>
+          {isLoading ? (
+            <div className="flex-1 flex items-center justify-center text-white font-yantramanav">लोड हो रहा है...</div>
+          ) : videoNews.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center text-white font-yantramanav">अभी कोई वीडियो उपलब्ध नहीं है।</div>
+          ) : (
+            /* Scroll Container (Snap Mandatory - Reels Style) */
+            <div ref={containerRef} className="flex-1 overflow-y-auto snap-y snap-mandatory scroll-smooth no-scrollbar relative">
+              {videoNews.map((news) => {
+                const ytId = getYouTubeId(news.video_url)
+                const formattedDate = new Date(news.published_at).toLocaleDateString('hi-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+                
+                return (
+                  <div key={news.id} className="h-[100dvh] w-full snap-start relative bg-black flex flex-col justify-center border-b border-gray-800">
+                    
+                    {/* YouTube iFrame Embed */}
+                    <div className="relative w-full aspect-[9/16] max-h-screen">
+                      <iframe
+                        className="absolute inset-0 w-full h-full"
+                        src={`https://www.youtube.com/embed/${ytId}?autoplay=0&loop=1&rel=0&modestbranding=1`}
+                        title={news.headline}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
 
-        <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className="relative">
-          <div
-            key={currentIndex}
-            className={`relative bg-gradient-to-br ${gradient} rounded-3xl overflow-hidden shadow-2xl min-h-[70vh] flex flex-col justify-end animate-fade-in`}
-          >
-            <div className="p-8 text-white relative z-10">
-              <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-poppins font-medium mb-4">
-                {currentNews.category}
-              </span>
-              <h1 className="text-2xl md:text-3xl font-bold font-yantramanav leading-tight mb-4">
-                {currentNews.headline}
-              </h1>
-              <div className="w-12 h-0.5 bg-white/50 rounded-full mb-4" />
-              <p className="text-base font-yantramanav leading-relaxed text-white/90 mb-6">
-                {currentNews.summary}
-              </p>
-              <p className="text-sm text-white/50 font-poppins">{currentNews.time}</p>
+                    {/* Bottom Info Overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 pb-20 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none">
+                      <h1 className="text-white font-bold font-yantramanav text-lg sm:text-xl leading-tight mb-2 drop-shadow-md">
+                        {news.headline}
+                      </h1>
+                      <div className="flex items-center gap-2 text-gray-300 text-xs font-poppins">
+                        <span>{news.categories?.name || 'Haryana'}</span>
+                        <span>•</span>
+                        <span>{formattedDate}</span>
+                      </div>
+                    </div>
 
-              <div className="flex items-center gap-3 mt-6">
-                <button onClick={() => speakNews(currentNews)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-poppins hover:bg-white/30 transition-all active:scale-95">
-                  <Volume2 className="w-4 h-4" />सुनें
-                </button>
-                <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                    `📰 ${currentNews.headline}\n\n${currentNews.summary}\n\n- Akashvani Speaking\n${SITE_CONFIG.url}`
-                  )}`}
-                  target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 bg-[#25D366] rounded-full text-sm font-poppins hover:bg-[#1da851] transition-all active:scale-95">
-                  <WhatsAppIcon className="w-4 h-4" />शेयर
-                </a>
-              </div>
+                  </div>
+                )
+              })}
             </div>
-            <div className="absolute top-10 right-10 w-32 h-32 bg-white/5 rounded-full blur-xl" />
-            <div className="absolute bottom-20 left-10 w-24 h-24 bg-white/5 rounded-full blur-xl" />
-          </div>
-
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-20">
-            <button onClick={goPrev} disabled={currentIndex === 0}
-              className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-brand-navy hover:bg-white transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed">
-              <ChevronUp className="w-5 h-5" />
-            </button>
-            <button onClick={goNext} disabled={currentIndex === dummyShortNews.length - 1}
-              className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-brand-navy hover:bg-white transition-all active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed">
-              <ChevronDown className="w-5 h-5" />
-            </button>
-          </div>
+          )}
         </div>
-
-        <div className="flex items-center justify-center gap-1.5 mt-6">
-          {dummyShortNews.map((_, idx) => (
-            <div key={idx} className={`h-1.5 rounded-full transition-all ${
-              idx === currentIndex ? 'w-6 bg-brand-navy' : 'w-1.5 bg-gray-300'
-            }`} />
-          ))}
-        </div>
-
-        <p className="text-center text-xs text-gray-400 mt-3 font-poppins">
-          ↑ ↓ स्वाइप या Arrow keys
-        </p>
       </main>
-
-      <Footer />
     </>
   )
 }
