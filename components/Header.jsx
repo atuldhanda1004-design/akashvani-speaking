@@ -56,13 +56,18 @@ function HeaderInner() {
             <button onClick={() => setIsSideMenuOpen(true)} className="text-white p-2 hover:bg-white/10 rounded-lg">
               <Menu className="w-6 h-6" />
             </button>
-            <Link href="/" className="flex items-center gap-2 min-w-0">
-              <Logo size="sm" />
-              <div className="min-w-0">
-                <h1 className="text-white font-poppins font-bold text-base sm:text-lg leading-tight truncate">Akashvani Speaking</h1>
-                <p className="text-white/70 text-[9px] sm:text-[10px] font-yantramanav leading-tight truncate">ईमानदार सोच - सच्ची खबरें</p>
-              </div>
-            </Link>
+            {/* Logo & Title — bigger logo + bigger text */}
+<Link href="/" className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 justify-center md:justify-start md:ml-2">
+  <Logo size="md" className="w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 shrink-0" />
+  <div className="min-w-0 text-left">
+    <h1 className="text-white font-poppins font-bold text-lg sm:text-xl md:text-2xl leading-tight truncate">
+      Akashvani Speaking
+    </h1>
+    <p className="text-white/80 text-[11px] sm:text-xs md:text-sm font-yantramanav leading-tight truncate mt-0.5">
+      ईमानदार सोच - सच्ची खबरें
+    </p>
+  </div>
+</Link>
             <button onClick={() => setIsSearchOpen(true)} className="text-white p-2 hover:bg-white/10 rounded-lg">
               <Search className="w-5 h-5" />
             </button>
