@@ -19,18 +19,44 @@ export default function AdminLogin() {
     setIsLoading(true)
     setError('')
 
+    const cleanEmail = email.trim()
+    const cleanPassword = password.trim()
+
+    // Demo Admin Login Check
+    const isDemo = cleanEmail === 'admin@akashvanispeaking.news' && cleanPassword === 'admin123'
+
     try {
       if (isSupabaseConfigured()) {
-        await signIn(email, password)
+        try {
+          await signIn(cleanEmail, cleanPassword)
+          router.push('/admin/dashboard')
+          return
+        } catch (supaErr) {
+          console.warn('Supabase Auth error:', supaErr.message)
+          
+          // अगर Supabase में user नहीं है लेकिन Demo डिटेल्स डाली हैं, तो Demo लॉगिन करा दो
+          if (isDemo) {
+            router.push('/admin/dashboard')
+            return
+          }
+
+          if (supaErr.message?.includes('Invalid path') || supaErr.message?.includes('fetch failed')) {
+            setError('Supabase URL गलत है। कृपया .env.local चेक करें या Demo ID का प्रयोग करें।')
+          } else if (supaErr.message?.includes('Invalid login credentials')) {
+            setError('गलत ईमेल या पासवर्ड।')
+          } else {
+            setError(supaErr.message || 'लॉगिन में त्रुटि हुई')
+          }
+          return
+        }
+      }
+
+      // If Supabase is not configured, fall back to Demo
+      if (isDemo) {
+        await new Promise((r) => setTimeout(r, 600))
         router.push('/admin/dashboard')
       } else {
-        // Fallback for demo
-        await new Promise((r) => setTimeout(r, 800))
-        if (email === 'admin@akashvanispeaking.news' && password === 'admin123') {
-          router.push('/admin/dashboard')
-        } else {
-          setError('गलत ईमेल या पासवर्ड। (Demo: admin@akashvanispeaking.news / admin123)')
-        }
+        setError('गलत ईमेल या पासवर्ड। (Demo: admin@akashvanispeaking.news / admin123)')
       }
     } catch (err) {
       setError(err.message || 'लॉगिन में त्रुटि हुई')
@@ -52,7 +78,7 @@ export default function AdminLogin() {
           <div className="flex justify-center mb-4">
             <Logo size="lg" />
           </div>
-          <h1 className="text-2xl font-bold font-poppins text-brand-primary">Admin Login</h1>
+          <h1 className="text-2xl font-bold font-poppins text-brand-primary">Admin / Reporter Login</h1>
           <p className="text-gray-400 text-sm font-poppins mt-1">Akashvani Speaking</p>
         </div>
 
@@ -94,6 +120,10 @@ export default function AdminLogin() {
             {isLoading ? 'लॉगिन हो रहा है...' : <><LogIn className="w-5 h-5" /> लॉगिन करें</>}
           </button>
         </form>
+
+        <p className="text-center text-xs text-gray-400 font-poppins mt-6">
+          Demo Login: admin@akashvanispeaking.news / admin123
+        </p>
       </div>
     </div>
   )
