@@ -1,4 +1,5 @@
 'use client'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -14,7 +15,7 @@ export default function AdminLogin() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Forgot Password Modal State
+  // Password Reset Modal State
   const [isForgotOpen, setIsForgotOpen] = useState(false)
   const [resetEmail, setResetEmail] = useState('')
   const [resetStatus, setResetStatus] = useState({ loading: false, msg: '', error: false })
@@ -28,11 +29,7 @@ export default function AdminLogin() {
       await signIn(email, password)
       router.push('/admin/dashboard')
     } catch (err) {
-      if (err.message?.includes('Invalid login credentials')) {
-        setError('गलत पासवर्ड या ईमेल दर्ज किया है!')
-      } else {
-        setError(err.message || 'लॉगिन में त्रुटि हुई')
-      }
+      setError(err.message || 'लॉगिन में त्रुटि हुई')
     } finally {
       setIsLoading(false)
     }
@@ -44,17 +41,27 @@ export default function AdminLogin() {
 
     try {
       await resetPasswordEmail(resetEmail)
-      setResetStatus({ loading: false, msg: '✅ पासवर्ड रिसेट लिंक आपके ईमेल पर भेज दिया गया है!', error: false })
+      setResetStatus({
+        loading: false,
+        msg: '✅ पासवर्ड रिसेट लिंक आपके ईमेल पर भेज दिया गया है!',
+        error: false,
+      })
     } catch (err) {
-      setResetStatus({ loading: false, msg: err.message || 'त्रुटि हुई!', error: true })
+      setResetStatus({
+        loading: false,
+        msg: err.message || 'त्रुटि हुई!',
+        error: true,
+      })
     }
   }
 
   return (
     <div className="min-h-screen bg-brand-background flex items-center justify-center p-4 relative">
-      
       {/* Back to Home Button */}
-      <Link href="/" className="absolute top-6 left-6 md:top-10 md:left-10 flex items-center gap-2 text-brand-primary font-poppins font-bold bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-all">
+      <Link
+        href="/"
+        className="absolute top-6 left-6 md:top-10 md:left-10 flex items-center gap-2 text-brand-primary font-poppins font-bold bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-all"
+      >
         <ArrowLeft className="w-5 h-5" /> होम पेज
       </Link>
 
@@ -63,32 +70,44 @@ export default function AdminLogin() {
           <div className="flex justify-center mb-4">
             <Logo size="lg" />
           </div>
-          <h1 className="text-2xl font-bold font-poppins text-brand-primary">Admin / Reporter Login</h1>
+          <h1 className="text-2xl font-bold font-poppins text-brand-primary">
+            Admin / Reporter Login
+          </h1>
           <p className="text-gray-400 text-sm font-poppins mt-1">Akashvani Speaking</p>
         </div>
 
         {error && (
-          <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-yantramanav text-center">
+          <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-yantramanav text-center leading-relaxed">
             {error}
           </div>
         )}
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label className="block text-sm font-poppins font-semibold text-gray-700 mb-1.5">Email</label>
+            <label className="block text-sm font-poppins font-semibold text-gray-700 mb-1.5">
+              Email
+            </label>
             <input
-              type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@akashvanispeaking.news" required
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@akashvanispeaking.news"
+              required
               className="w-full px-4 py-3 border border-gray-200 rounded-xl font-poppins text-sm outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 bg-gray-50"
             />
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-sm font-poppins font-semibold text-gray-700">Password</label>
+              <label className="block text-sm font-poppins font-semibold text-gray-700">
+                Password
+              </label>
               <button
                 type="button"
-                onClick={() => { setIsForgotOpen(true); setResetEmail(email); }}
+                onClick={() => {
+                  setIsForgotOpen(true)
+                  setResetEmail(email)
+                }}
                 className="text-xs font-poppins text-brand-primary hover:underline font-semibold"
               >
                 पासवर्ड भूल गए?
@@ -97,34 +116,55 @@ export default function AdminLogin() {
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
-                value={password} onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••" required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
                 className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl font-poppins text-sm outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 bg-gray-50"
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-primary">
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-primary"
+              >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
           </div>
 
           <button
-            type="submit" disabled={isLoading}
+            type="submit"
+            disabled={isLoading}
             className="w-full py-3.5 bg-brand-primary text-white rounded-xl font-poppins font-bold text-sm flex items-center justify-center gap-2 hover:bg-brand-secondary transition-all disabled:opacity-70 shadow-md cursor-pointer"
           >
-            {isLoading ? 'लॉगिन हो रहा है...' : <><LogIn className="w-5 h-5" /> लॉगिन करें</>}
+            {isLoading ? (
+              'लॉगिन हो रहा है...'
+            ) : (
+              <>
+                <LogIn className="w-5 h-5" /> लॉगिन करें
+              </>
+            )}
           </button>
         </form>
 
-        <p className="text-center text-xs text-gray-400 font-poppins mt-6">
-          Demo: admin@akashvanispeaking.news / admin123
-        </p>
+        <div className="mt-6 pt-4 border-t border-gray-100 text-center">
+          <p className="text-xs text-gray-500 font-poppins">
+            टेस्ट अकाउंट (Test Account):
+          </p>
+          <p className="text-xs font-mono font-semibold text-brand-primary mt-1">
+            admin@akashvanispeaking.news / admin123
+          </p>
+        </div>
       </div>
 
       {/* FORGOT PASSWORD MODAL */}
       {isForgotOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative animate-scale-in">
-            <button onClick={() => setIsForgotOpen(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full">
+            <button
+              onClick={() => setIsForgotOpen(false)}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full"
+            >
               <X className="w-5 h-5" />
             </button>
 
@@ -132,15 +172,21 @@ export default function AdminLogin() {
               <div className="w-10 h-10 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary">
                 <KeyRound className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold font-poppins text-gray-900">पासवर्ड रिसेट करें</h3>
+              <h3 className="text-lg font-bold font-poppins text-gray-900">
+                पासवर्ड रिसेट करें
+              </h3>
             </div>
 
             <p className="text-xs text-gray-500 font-yantramanav mb-4">
-              अपना पंजीकृत ईमेल दर्ज करें। हम आपको पासवर्ड बदलने के लिए एक लिंक भेजेंगे।
+              अपना पंजीकृत ईमेल दर्ज करें। हम आपको पासवर्ड बदलने का लिंक भेजेंगे।
             </p>
 
             {resetStatus.msg && (
-              <div className={`p-3 rounded-xl text-xs font-yantramanav mb-4 ${resetStatus.error ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`}>
+              <div
+                className={`p-3 rounded-xl text-xs font-yantramanav mb-4 ${
+                  resetStatus.error ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'
+                }`}
+              >
                 {resetStatus.msg}
               </div>
             )}
@@ -165,7 +211,6 @@ export default function AdminLogin() {
           </div>
         </div>
       )}
-
     </div>
   )
 }
