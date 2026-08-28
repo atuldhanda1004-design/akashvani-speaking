@@ -1,217 +1,171 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { FileText, Plus, LogOut, Trash2, Edit, IndianRupee, Users, Clock } from 'lucide-react'
-import Logo from '@/components/Logo'
-import { supabase, signOut, getCurrentUser, isSupabaseConfigured, getReporters, updatePayout } from '@/lib/supabase'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Plus, Trash2, Edit, Check, XCircle, IndianRupee, Video, Zap, Newspaper, FileText, Clock } from 'lucide-react'
+import AdminSidebar from '@/components/AdminSidebar'
+import { supabase, getCurrentUser, isSupabaseConfigured } from '@/lib/supabase'
+import { Suspense } from 'react'
 
-export default function AdminDashboard() {
+function DashboardContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const currentTab = searchParams.get('tab') || 'dashboard'
+  
   const [user, setUser] = useState(null)
   const [newsList, setNewsList] = useState([])
-  const [reporters, setReporters] = useState([])
-  const [stats, setStats] = useState({ total: 0, pending: 0 })
   const [loading, setLoading] = useState(true)
 
-  const fetchDashboardData = async (currentUser) => {
-    if (!isSupabaseConfigured()) {
-      setLoading(false)
-      return
-    }
+  const fetchData = async (currentUser, tab) => {
+    if (!isSupabaseConfigured()) { setLoading(false); return }
     
     const isAdmin = currentUser?.role === 'admin'
-
-    let query = supabase.from('news').select('id, headline, slug, status, published_at').order('published_at', { ascending: false })
+    let query = supabase.from('news').select('*, users!reporter_id(full_name)').order('published_at', { ascending: false })
     
-    if (!isAdmin && currentUser?.id) {
+    // Non-admin sees only their news
+    if (!isAdmin) {
       query = query.eq('reporter_id', currentUser.id)
     }
 
-    const { data: recent } = await query
-    if (recent) {
-      setNewsList(recent)
-      setStats({
-        total: recent.length,
-        pending: recent.filter(n => n.status === 'pending').length
-      })
-    }
-
-    if (isAdmin) {
-      const reps = await getReporters()
-      setReporters(reps)
-    }
+    // Filter by tab
+    if (tab === 'trending') query = query.or('is_trending.eq.true,is_breaking.eq.true')
+    else if (tab === 'video') query = query.not('video_url', 'is', null)
+    else if (tab === 'pending') query = query.eq('status', 'pending')
+    
+    const { data } = await query.limit(100)
+    setNewsList(data || [])
     setLoading(false)
   }
 
   useEffect(() => {
     async function init() {
       const u = await getCurrentUser()
-      if (!u) { 
-        router.push('/admin/login')
-        return 
-      }
+      if (!u) { router.push('/admin/login'); return }
       setUser(u)
-      await fetchDashboardData(u)
+      await fetchData(u, currentTab)
     }
     init()
-  }, [router])
-
-  const handleLogout = async () => {
-    await signOut()
-    router.push('/admin/login')
-  }
+  }, [currentTab, router])
 
   const handleDelete = async (id) => {
-    if (window.confirm('क्या आप सच में इस खबर को डिलीट करना चाहते हैं?')) {
-      if (supabase) {
-        await supabase.from('news').delete().eq('id', id)
-      }
-      fetchDashboardData(user)
+    if (window.confirm('क्या आप इस खबर को डिलीट करना चाहते हैं?')) {
+      await supabase.from('news').delete().eq('id', id)
+      fetchData(user, currentTab)
     }
   }
 
-  const handlePayoutUpdate = async (repId, currentAmount) => {
-    const newAmount = window.prompt('नई कमाई (Payout Amount in INR) दर्ज करें:', currentAmount)
-    if (newAmount !== null && !isNaN(newAmount)) {
-      const success = await updatePayout(repId, parseFloat(newAmount))
-      if (success) {
-        alert('Payout अपडेट हो गया!')
-        fetchDashboardData(user)
-      } else {
-        alert('अपडेट करने में एरर!')
-      }
-    }
+  const handleApprove = async (id) => {
+    await supabase.from('news').update({ status: 'approved' }).eq('id', id)
+    alert('✅ खबर Approve हो गई और अब Live है!')
+    fetchData(user, currentTab)
   }
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-brand-primary font-yantramanav">लोड हो रहा है...</div>
+  const handleReject = async (id) => {
+    await supabase.from('news').update({ status: 'rejected' }).eq('id', id)
+    fetchData(user, currentTab)
+  }
 
-  const isAdmin = user?.role === 'admin'
+  if (!user) return <div className="p-10 text-center">Loading...</div>
+
+  const isAdmin = user.role === 'admin'
+  
+  // Tab Titles
+  const tabTitles = { dashboard: '📊 Dashboard Overview', all: '📰 सारी खबरें', trending: '🔥 Trending / Live News', video: '📺 Video News', pending: '⏳ Pending Approvals', reporters: '👥 Reporters' }
+  const currentTitle = tabTitles[currentTab] || 'Dashboard'
 
   return (
-    <div className="min-h-screen bg-brand-background pb-10">
-      <header className="bg-brand-primary text-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Logo size="sm" />
-            <div>
-              <h1 className="font-poppins font-bold text-sm">Dashboard</h1>
-              <p className="text-[10px] text-white/70">{isAdmin ? 'Main Admin Panel' : 'Reporter Panel'}</p>
-            </div>
-          </div>
-          <button onClick={handleLogout} className="flex items-center gap-1 text-white/80 hover:text-white text-xs font-poppins bg-white/10 px-3 py-1.5 rounded-lg">
-            <LogOut className="w-4 h-4" /> लॉगआउट
-          </button>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        
-        {/* Welcome & Action */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+    <div className="min-h-screen bg-brand-background flex">
+      <AdminSidebar isAdmin={isAdmin} userName={user.full_name || user.email} />
+      
+      <main className="flex-1 p-4 md:p-8 pt-16 lg:pt-8 min-w-0">
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <div>
-            <h2 className="text-xl font-bold font-yantramanav text-gray-900">
-              नमस्ते, {user?.full_name || user?.email?.split('@')[0]}
-            </h2>
-            <p className="text-sm text-gray-500 font-poppins mt-1">
-              Role: <span className="font-semibold text-brand-primary uppercase">{user?.role || 'User'}</span>
-            </p>
+            <h1 className="text-2xl font-bold font-poppins text-brand-primary">{currentTitle}</h1>
+            <p className="text-sm text-gray-500 mt-1">नमस्ते, {user.full_name || 'Admin'} 👋</p>
           </div>
-          <Link href="/admin/news/new" className="bg-brand-primary text-white px-5 py-2.5 rounded-lg font-poppins font-semibold text-sm flex items-center gap-2 hover:bg-brand-secondary transition-all shadow-md">
+          <Link href="/admin/news/new" className="bg-brand-primary text-white px-4 py-2.5 rounded-lg font-poppins font-bold text-sm flex items-center gap-2 hover:bg-brand-secondary shadow-md">
             <Plus className="w-4 h-4" /> नई खबर लिखें
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center"><FileText /></div>
-            <div><p className="text-gray-500 text-sm">कुल खबरें</p><h3 className="text-2xl font-bold">{stats.total}</h3></div>
-          </div>
-          
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
-            <div className="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center"><Clock /></div>
-            <div><p className="text-gray-500 text-sm">पेंडिंग खबरें</p><h3 className="text-2xl font-bold">{stats.pending}</h3></div>
-          </div>
-
-          {!isAdmin && (
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-green-200 flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center"><IndianRupee /></div>
-              <div>
-                <p className="text-gray-500 text-sm">आपकी कुल कमाई</p>
-                <h3 className="text-2xl font-bold text-green-700">₹ {user?.payout_balance || '0'}</h3>
-              </div>
+        {/* Dashboard Stats (Overview Tab) */}
+        {currentTab === 'dashboard' && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border">
+              <FileText className="w-6 h-6 text-blue-500 mb-2" />
+              <p className="text-xs text-gray-500">कुल खबरें</p>
+              <p className="text-2xl font-bold">{newsList.length}</p>
             </div>
-          )}
-        </div>
-
-        {isAdmin && reporters.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-            <h3 className="text-lg font-bold font-poppins text-gray-900 mb-4 flex items-center gap-2">
-              <Users className="text-brand-primary" /> रिपोर्टर्स की कमाई (Payouts) सेट करें
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm font-poppins">
-                <thead>
-                  <tr className="bg-gray-50 text-gray-600">
-                    <th className="p-3 rounded-l-lg">Reporter Name</th>
-                    <th className="p-3">Email</th>
-                    <th className="p-3">Current Payout</th>
-                    <th className="p-3 rounded-r-lg text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reporters.map(rep => (
-                    <tr key={rep.id} className="border-b border-gray-50">
-                      <td className="p-3 font-semibold text-gray-900">{rep.full_name || 'No Name'}</td>
-                      <td className="p-3 text-gray-500">{rep.email}</td>
-                      <td className="p-3 text-green-600 font-bold">₹ {rep.payout_balance || '0'}</td>
-                      <td className="p-3 text-right">
-                        <button onClick={() => handlePayoutUpdate(rep.id, rep.payout_balance || 0)} className="text-xs bg-brand-primary text-white px-3 py-1.5 rounded hover:bg-brand-secondary">
-                          Update ₹
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="bg-white rounded-2xl p-5 shadow-sm border">
+              <Zap className="w-6 h-6 text-red-500 mb-2" />
+              <p className="text-xs text-gray-500">Live / Trending</p>
+              <p className="text-2xl font-bold">{newsList.filter(n => n.is_trending || n.is_breaking).length}</p>
+            </div>
+            <div className="bg-white rounded-2xl p-5 shadow-sm border">
+              <Video className="w-6 h-6 text-purple-500 mb-2" />
+              <p className="text-xs text-gray-500">Video News</p>
+              <p className="text-2xl font-bold">{newsList.filter(n => n.video_url).length}</p>
+            </div>
+            <div className="bg-white rounded-2xl p-5 shadow-sm border">
+              <Clock className="w-6 h-6 text-yellow-500 mb-2" />
+              <p className="text-xs text-gray-500">Pending</p>
+              <p className="text-2xl font-bold">{newsList.filter(n => n.status === 'pending').length}</p>
             </div>
           </div>
         )}
 
+        {/* News List */}
         <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-bold font-yantramanav text-gray-900 mb-4">
-            {isAdmin ? 'सभी रिपोर्टर्स की खबरें' : 'आपकी डाली गई खबरें'}
-          </h3>
-          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-            {newsList.length === 0 && <p className="text-sm text-gray-500">कोई खबर नहीं मिली।</p>}
-            {newsList.map((item) => (
-              <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-                <div className="flex-1 min-w-0 pr-4">
-                  <p className="font-yantramanav font-semibold text-gray-900 text-sm md:text-base truncate">{item.headline}</p>
-                  <p className="text-[10px] sm:text-xs text-gray-400 font-poppins mt-1">
-                    {new Date(item.published_at).toLocaleString('hi-IN')}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`px-2 py-1 rounded text-[10px] font-poppins font-medium ${
-                    item.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    {item.status === 'approved' ? 'Live' : 'Pending'}
-                  </span>
-                  
-                  <Link href={`/admin/news/edit/${item.id}`} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors" title="Edit">
-                    <Edit className="w-4 h-4" />
-                  </Link>
-                  <button onClick={() => handleDelete(item.id)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors" title="Delete">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+          {loading ? <p className="text-center p-10">लोड हो रहा है...</p> :
+            newsList.length === 0 ? (
+              <div className="text-center py-16">
+                <p className="text-gray-500 mb-4">इस सेक्शन में कोई खबर नहीं है।</p>
+                <Link href="/admin/news/new" className="bg-brand-primary text-white px-4 py-2 rounded-lg text-sm">पहली खबर लिखें</Link>
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="space-y-2">
+                {newsList.map(item => (
+                  <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md transition-shadow">
+                    <div className="flex-1 min-w-0 pr-3">
+                      <div className="flex items-center gap-1 mb-1 flex-wrap">
+                        {item.is_breaking && <span className="text-[9px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded">LIVE</span>}
+                        {item.is_trending && <span className="text-[9px] font-bold bg-orange-500 text-white px-1.5 py-0.5 rounded">TRENDING</span>}
+                        {item.video_url && <span className="text-[9px] font-bold bg-purple-500 text-white px-1.5 py-0.5 rounded">VIDEO</span>}
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${item.status === 'approved' ? 'bg-green-100 text-green-700' : item.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+                          {item.status === 'approved' ? 'LIVE ✓' : item.status === 'pending' ? 'PENDING ⏳' : 'REJECTED ✗'}
+                        </span>
+                      </div>
+                      <p className="font-yantramanav font-semibold text-gray-900 text-sm truncate">{item.headline}</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">
+                        {new Date(item.published_at).toLocaleDateString('hi-IN')} · Reporter: {item.users?.full_name || 'Admin'}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {isAdmin && item.status === 'pending' && (
+                        <>
+                          <button onClick={() => handleApprove(item.id)} className="p-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200" title="Approve"><Check className="w-4 h-4" /></button>
+                          <button onClick={() => handleReject(item.id)} className="p-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200" title="Reject"><XCircle className="w-4 h-4" /></button>
+                        </>
+                      )}
+                      <Link href={`/news/${item.slug}`} target="_blank" className="p-1.5 bg-blue-100 text-blue-600 rounded hover:bg-blue-200" title="View">👁</Link>
+                      <Link href={`/admin/news/edit/${item.id}`} className="p-1.5 bg-yellow-100 text-yellow-600 rounded hover:bg-yellow-200" title="Edit"><Edit className="w-4 h-4" /></Link>
+                      <button onClick={() => handleDelete(item.id)} className="p-1.5 bg-red-50 text-red-500 rounded hover:bg-red-100" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          }
         </div>
-
-      </div>
+      </main>
     </div>
+  )
+}
+
+export default function AdminDashboard() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
   )
 }
