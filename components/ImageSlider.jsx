@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import ImageWithWatermark from './ImageWithWatermark'
 
-export default function ImageSlider({ imageString, headline, location, date, reporter }) {
+export default function ImageSlider({ imageString, headline, location, date, reporter, role }) {
   const images = imageString ? String(imageString).split(',').map(s => s.trim()).filter(Boolean) : []
   const fallback = 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80'
   const displayImages = images.length > 0 ? images : [fallback]
@@ -16,15 +16,16 @@ export default function ImageSlider({ imageString, headline, location, date, rep
   return (
     <div className="relative w-full h-64 sm:h-80 md:h-[450px] bg-gray-100">
       <ImageWithWatermark
-        src={displayImages[index]}
-        alt={headline}
-        location={location}
-        date={date}
-        reporter={reporter}
-        className="w-full h-full"
-        fill
-        priority
-      />
+  src={displayImages[index]}
+  alt={headline}
+  location={location}
+  date={date}
+  reporter={reporter}
+  role={role}
+  className="w-full h-full"
+  fill
+  priority
+/>
       
       {/* Show Arrows only if there are multiple images */}
       {displayImages.length > 1 && (

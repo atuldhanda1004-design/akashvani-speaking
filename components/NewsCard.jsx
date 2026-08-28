@@ -19,13 +19,15 @@ export default function NewsCard({ news, index = 0 }) {
     >
       <Link href={`/news/${news.slug}`} className="block relative w-full h-52">
         <ImageWithWatermark
-          src={imageUrl}
-          alt={news.headline}
-          location={news.location || news.categories?.name}
-          date={timeStr}
-          className="h-52 w-full"
-          fill
-        />
+  src={imageUrl}
+  alt={news.headline}
+  location={news.location || news.categories?.name}
+  date={timeStr}
+  reporter={news.users?.full_name}
+  role={news.users?.role}
+  className="h-52 w-full"
+  fill
+/>
       </Link>
 
       <div className="p-4">

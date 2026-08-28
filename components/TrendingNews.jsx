@@ -71,7 +71,15 @@ function NewsItemContent({ item }) {
       {/* LEFT SIDE - PHOTO (Fixed Width Mobile) */}
       <div className="w-[40%] sm:w-[45%] relative shrink-0 bg-gray-100">
         <Link href={`/news/${item.slug}`} className="absolute inset-0 block">
-          <ImageWithWatermark src={item.featured_image} alt={item.headline} location={item.location} date={timeStr} reporter={item.users?.full_name} fill />
+          <ImageWithWatermark
+  src={item.featured_image}
+  alt={item.headline}
+  location={item.location}
+  date={timeStr}
+  reporter={item.users?.full_name}
+  role={item.users?.role}
+  fill
+/>
         </Link>
       </div>
 
