@@ -147,14 +147,6 @@ export default function AdminLogin() {
           </button>
         </form>
 
-        <div className="mt-6 pt-4 border-t border-gray-100 text-center">
-          <p className="text-xs text-gray-500 font-poppins">
-            टेस्ट अकाउंट (Test Account):
-          </p>
-          <p className="text-xs font-mono font-semibold text-brand-primary mt-1">
-            admin@akashvanispeaking.news / admin123
-          </p>
-        </div>
       </div>
 
       {/* FORGOT PASSWORD MODAL */}

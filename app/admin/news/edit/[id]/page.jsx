@@ -21,14 +21,12 @@ function toDateInputValue(iso) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
-function dateInputToISO(dateStr, fallbackISO) {
-  if (!dateStr) return fallbackISO || new Date().toISOString()
-  // keep roughly same time-of-day as original if possible
-  const base = fallbackISO ? new Date(fallbackISO) : new Date()
-  const [y, m, d] = dateStr.split('-').map(Number)
-  const out = new Date(base)
-  out.setFullYear(y, m - 1, d)
-  return out.toISOString()
+function toTimeInputValue(iso) {
+  if (!iso) return '12:00'
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return '12:00'
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 export default function EditNewsPage({ params }) {
@@ -48,10 +46,11 @@ export default function EditNewsPage({ params }) {
     video_type: 'youtube',
     status: 'pending',
     live_updates: [{ time: '', text: '' }],
-    published_date: '', // YYYY-MM-DD for input
+    published_date: '',
+    published_time: '12:00',
   })
   const [originalPublishedAt, setOriginalPublishedAt] = useState(null)
-  const [existingImageString, setExistingImageString] = useState('')
+  const [existingImages, setExistingImages] = useState([])
   const [newImageFiles, setNewImageFiles] = useState([])
   const [newPreviews, setNewPreviews] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -110,8 +109,13 @@ export default function EditNewsPage({ params }) {
             ? newsItem.live_updates
             : [{ time: '', text: '' }],
         published_date: toDateInputValue(newsItem.published_at),
+        published_time: toTimeInputValue(newsItem.published_at),
       })
-      setExistingImageString(newsItem.featured_image || '')
+      setExistingImages(
+        newsItem.featured_image
+          ? newsItem.featured_image.split(',').map((s) => s.trim()).filter(Boolean)
+          : []
+      )
       setIsLoading(false)
     }
 
@@ -151,6 +155,17 @@ export default function EditNewsPage({ params }) {
       ),
     }))
 
+  // Image reorder / delete
+  const moveImage = (fromIndex, toIndex) => {
+    const arr = [...existingImages]
+    ;[arr[toIndex], arr[fromIndex]] = [arr[fromIndex], arr[toIndex]]
+    setExistingImages(arr)
+  }
+  const deleteExistingImage = (i) => {
+    if (!confirm('इस फोटो को हटाएँ?')) return
+    setExistingImages(existingImages.filter((_, idx) => idx !== i))
+  }
+
   const handleNewImages = (e) => {
     const files = Array.from(e.target.files || [])
     if (!files.length) return
@@ -160,6 +175,11 @@ export default function EditNewsPage({ params }) {
       reader.onload = (ev) => setNewPreviews((prev) => [...prev, ev.target.result])
       reader.readAsDataURL(file)
     })
+  }
+
+  const removeNewImage = (i) => {
+    setNewImageFiles((prev) => prev.filter((_, x) => x !== i))
+    setNewPreviews((prev) => prev.filter((_, x) => x !== i))
   }
 
   const handleUpdate = async (e) => {
@@ -182,25 +202,21 @@ export default function EditNewsPage({ params }) {
               .filter((u) => u.time && u.text)
           : []
 
-      let imageString = existingImageString
-      if (newImageFiles.length > 0) {
-        const urls = []
-        for (const file of newImageFiles) {
-          urls.push(await uploadImage(file))
-        }
-        const old = existingImageString
-          ? existingImageString.split(',').map((s) => s.trim()).filter(Boolean)
-          : []
-        imageString = [...old, ...urls].join(',')
+      // Upload new images
+      const newUrls = []
+      for (const file of newImageFiles) {
+        newUrls.push(await uploadImage(file))
       }
 
-      if (!imageString) throw new Error('कम से कम 1 फोटो जरूरी है')
+      const finalImages = [...existingImages, ...newUrls]
+      if (!finalImages.length) throw new Error('कम से कम 1 फोटो जरूरी है')
 
       const user = await getCurrentUser()
 
-      // Date: if empty, keep original
-      const published_at = formData.published_date
-        ? dateInputToISO(formData.published_date, originalPublishedAt)
+      const publishedAt = formData.published_date
+        ? new Date(
+            `${formData.published_date}T${formData.published_time || '12:00'}:00`
+          ).toISOString()
         : originalPublishedAt || new Date().toISOString()
 
       const payload = {
@@ -210,14 +226,14 @@ export default function EditNewsPage({ params }) {
         category_id: formData.category_id
           ? parseInt(formData.category_id, 10)
           : null,
-        featured_image: imageString,
+        featured_image: finalImages.join(','),
         location: formData.location.trim() || null,
         is_trending: formData.is_trending,
         is_breaking: formData.is_breaking,
         live_updates: cleanedLive,
         video_url: formData.video_url.trim() || null,
         video_type: formData.video_url.trim() ? formData.video_type : null,
-        published_at,
+        published_at: publishedAt,
       }
 
       if (user?.role === 'admin') {
@@ -244,10 +260,6 @@ export default function EditNewsPage({ params }) {
       </div>
     )
   }
-
-  const existingImages = existingImageString
-    ? existingImageString.split(',').map((s) => s.trim()).filter(Boolean)
-    : []
 
   return (
     <div className="min-h-screen bg-brand-background pb-10">
@@ -414,22 +426,52 @@ export default function EditNewsPage({ params }) {
                 </div>
               )}
 
+              {/* Existing images + reorder + delete */}
               <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
                 <label className="block text-sm font-poppins font-semibold text-gray-700 mb-3">
-                  मौजूदा फोटो
+                  मौजूदा फोटो (क्रम बदलें या हटाएँ)
                 </label>
                 {existingImages.length ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
                     {existingImages.map((src, i) => (
                       <div
                         key={i}
-                        className="h-24 rounded-xl overflow-hidden bg-gray-100"
+                        className="relative h-28 rounded-xl overflow-hidden bg-gray-100 border group"
                       >
-                        <img
-                          src={src}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={src} alt="" className="w-full h-full object-cover" />
+                        <div className="absolute top-1 left-1 bg-brand-primary text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                          #{i + 1}
+                        </div>
+                        <div className="absolute top-1 right-1 flex gap-1">
+                          {i > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => moveImage(i, i - 1)}
+                              className="bg-white/95 text-brand-primary text-xs font-bold w-6 h-6 rounded shadow flex items-center justify-center"
+                              title="ऊपर करें"
+                            >
+                              ←
+                            </button>
+                          )}
+                          {i < existingImages.length - 1 && (
+                            <button
+                              type="button"
+                              onClick={() => moveImage(i, i + 1)}
+                              className="bg-white/95 text-brand-primary text-xs font-bold w-6 h-6 rounded shadow flex items-center justify-center"
+                              title="नीचे करें"
+                            >
+                              →
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => deleteExistingImage(i)}
+                            className="bg-red-500 text-white text-xs font-bold w-6 h-6 rounded shadow flex items-center justify-center"
+                            title="हटाएँ"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -446,18 +488,22 @@ export default function EditNewsPage({ params }) {
                   onChange={handleNewImages}
                   className="w-full border p-2 rounded-xl"
                 />
-                {newPreviews.length > 0 ? (
+                {newPreviews.length > 0 && (
                   <div className="grid grid-cols-3 gap-2 mt-3">
                     {newPreviews.map((src, i) => (
-                      <img
-                        key={i}
-                        src={src}
-                        alt=""
-                        className="h-20 w-full object-cover rounded-lg"
-                      />
+                      <div key={i} className="relative">
+                        <img src={src} alt="" className="h-20 w-full object-cover rounded-lg" />
+                        <button
+                          type="button"
+                          onClick={() => removeNewImage(i)}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
                     ))}
                   </div>
-                ) : null}
+                )}
               </div>
 
               <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
@@ -477,10 +523,10 @@ export default function EditNewsPage({ params }) {
             </div>
 
             <div className="space-y-6">
-              {/* DATE FIELD */}
+              {/* Date + Time */}
               <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
                 <label className="block text-sm font-poppins font-semibold text-gray-700 mb-2">
-                  खबर की तारीख (Published Date)
+                  📅 खबर की तारीख
                 </label>
                 <input
                   type="date"
@@ -488,10 +534,21 @@ export default function EditNewsPage({ params }) {
                   onChange={(e) =>
                     setFormData({ ...formData, published_date: e.target.value })
                   }
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-poppins outline-none focus:border-brand-primary"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm"
+                />
+                <label className="block text-sm font-poppins font-semibold text-gray-700 mt-3 mb-2">
+                  ⏰ समय
+                </label>
+                <input
+                  type="time"
+                  value={formData.published_time}
+                  onChange={(e) =>
+                    setFormData({ ...formData, published_time: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm"
                 />
                 <p className="text-[11px] text-gray-400 mt-2 font-yantramanav">
-                  खाली छोड़ने / न बदलने पर पुरानी तारीख ही रहेगी। बदलना हो तो नई date चुनें।
+                  न बदलने पर पुरानी तारीख/समय ही रहेगा।
                 </p>
               </div>
 

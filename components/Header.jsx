@@ -93,15 +93,21 @@ function HeaderInner() {
 
         {showTabs && (
           <div className="bg-brand-background border-b border-gray-200">
-            <div className="max-w-7xl mx-auto px-3 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
-              <Link href="/?tab=latest" scroll={false} className={`shrink-0 px-3 sm:px-4 py-1.5 rounded-md font-poppins font-semibold text-xs sm:text-sm transition-all shadow-sm ${activeTab === 'latest' ? 'bg-brand-primary text-white' : 'bg-white text-brand-primary border border-brand-primary/30'}`}>
-                Haryana Latest News
-              </Link>
-              <Link href="/?tab=live" scroll={false} className={`shrink-0 px-3 sm:px-4 py-1.5 rounded-md font-poppins font-semibold text-xs sm:text-sm transition-all flex items-center gap-2 shadow-sm ${activeTab === 'live' ? 'bg-brand-primary text-white' : 'bg-white text-brand-primary border border-brand-primary/30'}`}>
-                Live Updates <span className={`w-2 h-2 rounded-full animate-pulse-red ${activeTab === 'live' ? 'bg-white' : 'bg-brand-red'}`} />
-              </Link>
-            </div>
-          </div>
+  <div className="max-w-7xl mx-auto px-3 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
+    <Link href="/?tab=latest" scroll={false}
+      className={`shrink-0 px-3 sm:px-4 py-1.5 rounded-md font-poppins font-semibold text-xs sm:text-sm shadow-sm ${
+        activeTab === 'latest' ? 'bg-brand-primary text-white' : 'bg-white text-brand-primary border border-brand-primary/30'
+      }`}>
+      Haryana Latest News
+    </Link>
+    <Link href="/?tab=live" scroll={false}
+      className={`shrink-0 px-3 sm:px-4 py-1.5 rounded-md font-poppins font-semibold text-xs sm:text-sm shadow-sm ${
+        activeTab === 'live' ? 'bg-brand-primary text-white' : 'bg-white text-brand-primary border border-brand-primary/30'
+      }`}>
+      Live Updates
+    </Link>
+  </div>
+</div>
         )}
       </header>
 
