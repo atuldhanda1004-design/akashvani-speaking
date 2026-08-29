@@ -15,7 +15,6 @@ export default function AdminLogin() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Password Reset Modal State
   const [isForgotOpen, setIsForgotOpen] = useState(false)
   const [resetEmail, setResetEmail] = useState('')
   const [resetStatus, setResetStatus] = useState({ loading: false, msg: '', error: false })
@@ -56,24 +55,40 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-background flex items-center justify-center p-4 relative">
-      {/* Back to Home Button */}
+    <div className="min-h-screen bg-gradient-to-br from-brand-secondary via-brand-primary to-brand-secondary flex items-center justify-center p-4 relative">
+      {/* soft pattern overlay */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle at 20% 20%, white 0, transparent 40%), radial-gradient(circle at 80% 80%, white 0, transparent 35%)',
+        }}
+      />
+
+      {/* Back to Home */}
       <Link
         href="/"
-        className="absolute top-6 left-6 md:top-10 md:left-10 flex items-center gap-2 text-brand-primary font-poppins font-bold bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-all"
+        className="absolute top-6 left-6 md:top-10 md:left-10 z-10 flex items-center gap-2 text-white font-poppins font-bold bg-white/15 hover:bg-white/25 backdrop-blur-sm px-4 py-2 rounded-lg shadow-sm transition-all border border-white/20"
       >
         <ArrowLeft className="w-5 h-5" /> होम पेज
       </Link>
 
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 md:p-10 border border-gray-100 mt-10">
+      <div className="relative z-10 w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 md:p-10 border border-white/40 mt-10">
         <div className="text-center mb-8">
+          {/* Dark circle so white logo is always visible */}
           <div className="flex justify-center mb-4">
-            <Logo size="lg" />
+            <div className="w-20 h-20 rounded-full bg-brand-primary shadow-lg border-4 border-brand-primary/20 flex items-center justify-center p-2">
+              <Logo size="lg" className="w-full h-full" />
+            </div>
           </div>
           <h1 className="text-2xl font-bold font-poppins text-brand-primary">
             Admin / Reporter Login
           </h1>
-          <p className="text-gray-400 text-sm font-poppins mt-1">Akashvani Speaking</p>
+          <p className="text-gray-500 text-sm font-poppins mt-1">
+            Akashvani Speaking
+          </p>
+          <p className="text-xs text-gray-400 font-yantramanav mt-1">
+            संपादक / पत्रकार लॉगिन
+          </p>
         </div>
 
         {error && (
@@ -91,7 +106,7 @@ export default function AdminLogin() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@akashvanispeaking.news"
+              placeholder="email@example.com"
               required
               className="w-full px-4 py-3 border border-gray-200 rounded-xl font-poppins text-sm outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 bg-gray-50"
             />
@@ -146,13 +161,12 @@ export default function AdminLogin() {
             )}
           </button>
         </form>
-
       </div>
 
-      {/* FORGOT PASSWORD MODAL */}
+      {/* Forgot Password Modal */}
       {isForgotOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative animate-scale-in">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative">
             <button
               onClick={() => setIsForgotOpen(false)}
               className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full"
@@ -176,7 +190,9 @@ export default function AdminLogin() {
             {resetStatus.msg && (
               <div
                 className={`p-3 rounded-xl text-xs font-yantramanav mb-4 ${
-                  resetStatus.error ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'
+                  resetStatus.error
+                    ? 'bg-red-50 text-red-600'
+                    : 'bg-green-50 text-green-700'
                 }`}
               >
                 {resetStatus.msg}
