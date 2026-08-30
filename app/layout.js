@@ -12,20 +12,8 @@ export const metadata = {
   description: SITE_CONFIG.description,
   keywords: SITE_CONFIG.keywords,
   authors: [{ name: SITE_CONFIG.name }],
-  creator: SITE_CONFIG.developer.name,
+  creator: SITE_CONFIG.developer?.name,
   publisher: SITE_CONFIG.name,
-  alternates: {
-    canonical: SITE_CONFIG.url,
-    types: {
-      'application/rss+xml': `${SITE_CONFIG.url}/rss.xml`,
-    },
-  },
-  verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '',
-  },
-  other: {
-    'google-adsense-account': process.env.NEXT_PUBLIC_ADSENSE_ID || '',
-  },
   openGraph: {
     title: `${SITE_CONFIG.name} | ${SITE_CONFIG.tagline}`,
     description: SITE_CONFIG.description,
@@ -33,13 +21,7 @@ export const metadata = {
     siteName: SITE_CONFIG.name,
     locale: 'hi_IN',
     type: 'website',
-    images: [{ url: SITE_CONFIG.ogImage, width: 1200, height: 630 }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: SITE_CONFIG.name,
-    description: SITE_CONFIG.description,
-    images: [SITE_CONFIG.ogImage],
+    images: [{ url: SITE_CONFIG.ogImage || '/logo.png', width: 1200, height: 630 }],
   },
   robots: { index: true, follow: true },
   icons: { icon: '/favicon.ico', apple: '/logo.png' },
@@ -50,27 +32,50 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: '#30567D', // Changed to match your primary header color
+  themeColor: '#30567D',
 }
 
 export default function RootLayout({ children }) {
-  const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_ID || 'ca-pub-XXXXXXXXXXXXXXXX'
+  const oneSignalAppId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '0f47a4cc-753c-49bc-869c-da583a236cfc'
+  const safariWebId = 'web.onesignal.auto.6401d2fc-b951-4213-a02c-03159c046b78'
+  const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_ID || ''
 
   return (
     <html lang="hi">
       <head>
-        {/* Google AdSense Auto Ads Script */}
+        {adsenseId ? (
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseId}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        ) : null}
+
+        {/* ===== OneSignal (same as their paste code, Next.js way) ===== */}
         <Script
-          async
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseId}`}
-          crossOrigin="anonymous"
+          src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
           strategy="afterInteractive"
+          defer
         />
+        <Script id="onesignal-init" strategy="afterInteractive">
+          {`
+            window.OneSignalDeferred = window.OneSignalDeferred || [];
+            OneSignalDeferred.push(async function(OneSignal) {
+              await OneSignal.init({
+                appId: "${oneSignalAppId}",
+                safari_web_id: "${safariWebId}",
+                notifyButton: {
+                  enable: true,
+                },
+                allowLocalhostAsSecureOrigin: true,
+                autoResubscribe: true,
+              });
+            });
+          `}
+        </Script>
       </head>
-      {/* 
-        bg-brand-background gives it the #E7EEF6 color you requested. 
-        pb-16 is to ensure the footer doesn't get hidden behind the mobile BottomNav 
-      */}
+
       <body className="min-h-screen flex flex-col bg-brand-background pb-16 md:pb-0">
         {children}
         <BottomNav />

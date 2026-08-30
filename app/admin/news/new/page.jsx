@@ -160,19 +160,22 @@ export default function AddNewsPage() {
       const savedNews = await createNews(payload)
 
       // Push notification (agar admin ne publish ki)
-      if (isAdmin && savedNews) {
-        try {
-          await fetch('/api/notify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              title: payload.headline,
-              url: `${window.location.origin}/news/${payload.slug}`,
-              image: urls[0] || '',
-            }),
-          })
-        } catch {}
-      }
+      if (isAdmin) {
+  try {
+    await fetch('/api/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: payload.headline,
+        message: payload.subheadline || payload.headline,
+        url: `${window.location.origin}/news/${payload.slug}`,
+        image: (payload.featured_image || '').split(',')[0] || '',
+      }),
+    })
+  } catch (e) {
+    console.warn('Notification failed', e)
+  }
+}
 
       alert('✅ खबर सबमिट हो गई!')
       router.push('/admin/dashboard')
