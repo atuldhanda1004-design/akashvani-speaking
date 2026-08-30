@@ -8,7 +8,7 @@ export default function ShareButtons({ url, title, compact = false }) {
   const shareUrl = url || (typeof window !== 'undefined' ? window.location.href : '')
   const shareTitle = title || 'Akashvani Speaking'
   
-  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`📰 ${shareTitle}\n\n${shareUrl}`)}`
+  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareTitle}\n\n${shareUrl}`)}`
   const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`
 
   const handleCopy = async () => {
