@@ -2,6 +2,7 @@ import './globals.css'
 import Script from 'next/script'
 import { SITE_CONFIG } from '@/lib/constants'
 import BottomNav from '@/components/BottomNav'
+import NotificationBell from '@/components/NotificationBell'
 
 export const metadata = {
   metadataBase: new URL(SITE_CONFIG.url),
@@ -22,7 +23,6 @@ export const metadata = {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '',
   },
   other: {
-    'fb:app_id': '966242223397117', // Fixes missing fb:app_id property in FB Debugger
     'google-adsense-account': process.env.NEXT_PUBLIC_ADSENSE_ID || '',
   },
   openGraph: {
@@ -33,6 +33,12 @@ export const metadata = {
     locale: 'hi_IN',
     type: 'website',
     images: [{ url: SITE_CONFIG.ogImage || '/logo.png', width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_CONFIG.name,
+    description: SITE_CONFIG.description,
+    images: [SITE_CONFIG.ogImage],
   },
   robots: { index: true, follow: true },
   icons: { icon: '/favicon.ico', apple: '/logo.png' },
@@ -54,6 +60,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="hi">
       <head>
+        {/* Facebook App ID (Fixed using property attribute for FB Scraper) */}
+        <meta property="fb:app_id" content="966242223397117" />
+
+        {/* Google AdSense */}
         {adsenseId ? (
           <Script
             async
@@ -63,61 +73,60 @@ export default function RootLayout({ children }) {
           />
         ) : null}
 
-        {/* ===== OneSignal (same as their paste code, Next.js way) ===== */}
-        {/* OneSignal */}
-<Script
-  src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
-  strategy="afterInteractive"
-/>
-<Script id="onesignal-init" strategy="afterInteractive">
-  {`
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function (OneSignal) {
-      await OneSignal.init({
-        appId: "${process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '0f47a4cc-753c-49bc-869c-da583a236cfc'}",
-        safari_web_id: "web.onesignal.auto.6401d2fc-b951-4213-a02c-03159c046b78",
-        serviceWorkerPath: "/OneSignalSDKWorker.js",
-        serviceWorkerParam: { scope: "/" },
-        allowLocalhostAsSecureOrigin: true,
-        notifyButton: {
-          enable: true,
-          size: "medium",
-          position: "bottom-right",
-        },
-        promptOptions: {
-          slidedown: {
-            prompts: [
-              {
-                type: "push",
-                autoPrompt: true,
-                delay: { pageViews: 1, timeDelay: 3 },
-                text: {
-                  actionMessage: "नई खबरों की सूचनाएँ पाना चाहते हैं?",
-                  acceptButton: "Allow",
-                  cancelButton: "No thanks"
+        {/* OneSignal Web Push SDK */}
+        <Script
+          src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+          strategy="afterInteractive"
+        />
+        <Script id="onesignal-init" strategy="afterInteractive">
+          {`
+            window.OneSignalDeferred = window.OneSignalDeferred || [];
+            OneSignalDeferred.push(async function (OneSignal) {
+              await OneSignal.init({
+                appId: "${oneSignalAppId}",
+                safari_web_id: "${safariWebId}",
+                serviceWorkerPath: "/OneSignalSDKWorker.js",
+                serviceWorkerParam: { scope: "/" },
+                allowLocalhostAsSecureOrigin: true,
+                notifyButton: {
+                  enable: true,
+                  size: "medium",
+                  position: "bottom-right",
+                },
+                promptOptions: {
+                  slidedown: {
+                    prompts: [
+                      {
+                        type: "push",
+                        autoPrompt: true,
+                        delay: { pageViews: 1, timeDelay: 3 },
+                        text: {
+                          actionMessage: "नई खबरों की सूचनाएँ पाना चाहते हैं?",
+                          acceptButton: "Allow",
+                          cancelButton: "No thanks"
+                        }
+                      }
+                    ]
+                  }
                 }
-              }
-            ]
-          }
-        }
-      });
+              });
 
-      // Force prompt if not decided yet
-      try {
-        const permission = OneSignal.Notifications.permissionNative;
-        if (permission === "default") {
-          await OneSignal.Slidedown.promptPush();
-        }
-      } catch (e) {
-        console.log("OneSignal prompt error", e);
-      }
-    });
-  `}
-</Script>
+              try {
+                const permission = OneSignal.Notifications.permissionNative;
+                if (permission === "default") {
+                  await OneSignal.Slidedown.promptPush();
+                }
+              } catch (e) {
+                console.log("OneSignal prompt error", e);
+              }
+            });
+          `}
+        </Script>
       </head>
 
       <body className="min-h-screen flex flex-col bg-brand-background pb-16 md:pb-0">
         {children}
+        <NotificationBell />
         <BottomNav />
       </body>
     </html>
