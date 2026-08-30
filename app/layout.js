@@ -15,6 +15,10 @@ export const metadata = {
   authors: [{ name: SITE_CONFIG.name }],
   creator: SITE_CONFIG.developer?.name,
   publisher: SITE_CONFIG.name,
+  // 🟢 Next.js Native Facebook App ID (Renders <meta property="fb:app_id" content="..." />)
+  facebook: {
+    appId: '966242223397117',
+  },
   alternates: {
     canonical: SITE_CONFIG.url,
     types: { 'application/rss+xml': `${SITE_CONFIG.url}/rss.xml` },
@@ -23,7 +27,6 @@ export const metadata = {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '',
   },
   other: {
-    // Note: 'fb:app_id' is intentionally removed from here so Next.js doesn't force name="" attribute
     'google-adsense-account': process.env.NEXT_PUBLIC_ADSENSE_ID || '',
   },
   openGraph: {
@@ -61,9 +64,6 @@ export default function RootLayout({ children }) {
   return (
     <html lang="hi">
       <head>
-        {/* Facebook App ID (Using property="" attribute required by Facebook Debugger) */}
-        <meta property="fb:app_id" content="966242223397117" />
-
         {/* Google AdSense */}
         {adsenseId ? (
           <Script

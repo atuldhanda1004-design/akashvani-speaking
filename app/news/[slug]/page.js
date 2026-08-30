@@ -32,22 +32,22 @@ async function getNewsData(rawSlug) {
   return allDummy.find((n) => n.slug === slug) || null
 }
 
-// 📸 100% GUARANTEED OPENGRAPH METADATA FOR FACEBOOK & WHATSAPP
 export async function generateMetadata({ params }) {
   const news = await getNewsData(params.slug)
   if (!news) return { title: 'खबर नहीं मिली | Akashvani Speaking' }
 
-  // Extract clean direct Supabase Storage Image URL
-  const rawImg = news.featured_image
+  const firstImage = news.featured_image
     ? String(news.featured_image).split(',')[0].trim()
     : ''
-  
-  const imageUrl = rawImg || SITE_CONFIG.ogImage
+  const imageUrl = firstImage || SITE_CONFIG.ogImage
   const canonicalUrl = `https://www.akashvanispeaking.news/news/${params.slug}`
 
   return {
     title: `${news.headline} | Akashvani Speaking`,
     description: news.subheadline || news.headline,
+    facebook: {
+      appId: '966242223397117',
+    },
     alternates: {
       canonical: canonicalUrl,
     },
@@ -133,7 +133,6 @@ export default async function NewsDetailPage({ params }) {
             <TextToSpeech text={fullText} headline={news.headline} />
           </div>
 
-          {/* LIVE UPDATES */}
           {showLiveUpdates && (
             <div className="relative border-2 border-brand-red rounded-xl p-4 mb-8 mt-2 bg-red-50/40">
               <div className="absolute -top-3 left-4 bg-brand-red text-white text-xs font-bold px-3 py-1 rounded font-yantramanav">
@@ -159,7 +158,6 @@ export default async function NewsDetailPage({ params }) {
             </div>
           )}
 
-          {/* POINTS & HEADINGS */}
           <div className="space-y-4 mb-8">
             {(news.points || []).map((point, idx) => {
               if (String(point).startsWith('[H]')) {
@@ -183,7 +181,6 @@ export default async function NewsDetailPage({ params }) {
             })}
           </div>
 
-          {/* VIDEO NEWS */}
           {news.video_url && (
             <div className="mb-8">
               <h2 className="text-xl font-bold font-yantramanav text-gray-900 mb-4 flex items-center gap-2">
@@ -203,7 +200,6 @@ export default async function NewsDetailPage({ params }) {
             </div>
           )}
 
-          {/* SHARE & SAVE */}
           <div className="bg-gray-50 p-4 rounded-xl mb-4 border border-gray-100 flex items-center justify-between mt-8">
             <span className="text-sm font-bold text-gray-700 font-yantramanav">
               शेयर करें:
@@ -222,7 +218,6 @@ export default async function NewsDetailPage({ params }) {
           </Link>
         </div>
 
-        {/* RELATED NEWS */}
         <div className="bg-brand-background p-4 md:p-8 border-t border-gray-200">
           <h2 className="text-lg font-bold font-poppins text-brand-secondary mb-4">
             संबंधित खबरें (Related)
