@@ -4,6 +4,7 @@ export const size = { width: 32, height: 32 }
 export const contentType = 'image/png'
 export const runtime = 'edge'
 
+// This becomes /icon automatically and overrides defaults
 export default function Icon() {
   return new ImageResponse(
     (
@@ -16,10 +17,11 @@ export default function Icon() {
           justifyContent: 'center',
           background: '#1B3C5F',
           borderRadius: '50%',
-          color: 'white',
-          fontSize: 14,
-          fontWeight: 700,
-          fontFamily: 'sans-serif',
+          color: '#fff',
+          fontSize: 11,
+          fontWeight: 800,
+          fontFamily: 'Arial, sans-serif',
+          letterSpacing: '-0.5px',
         }}
       >
         AS

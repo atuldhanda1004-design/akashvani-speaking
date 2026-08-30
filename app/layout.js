@@ -2,7 +2,7 @@ import './globals.css'
 import Script from 'next/script'
 import { SITE_CONFIG } from '@/lib/constants'
 import BottomNav from '@/components/BottomNav'
-import NotificationBell from '@/components/NotificationBell'
+
 import WelcomePopup from '@/components/WelcomePopup'
 
 export const metadata = {
@@ -126,7 +126,7 @@ export default function RootLayout({ children }) {
       <body className="min-h-screen flex flex-col bg-brand-background pb-16 md:pb-0">
         {children}
         <WelcomePopup />
-        <NotificationBell />
+        
         <BottomNav />
       </body>
     </html>
