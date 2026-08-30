@@ -53,27 +53,56 @@ export default function RootLayout({ children }) {
         ) : null}
 
         {/* ===== OneSignal (same as their paste code, Next.js way) ===== */}
-        <Script
-          src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
-          strategy="afterInteractive"
-          defer
-        />
-        <Script id="onesignal-init" strategy="afterInteractive">
-          {`
-            window.OneSignalDeferred = window.OneSignalDeferred || [];
-            OneSignalDeferred.push(async function(OneSignal) {
-              await OneSignal.init({
-                appId: "${oneSignalAppId}",
-                safari_web_id: "${safariWebId}",
-                notifyButton: {
-                  enable: true,
-                },
-                allowLocalhostAsSecureOrigin: true,
-                autoResubscribe: true,
-              });
-            });
-          `}
-        </Script>
+        {/* OneSignal */}
+<Script
+  src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+  strategy="afterInteractive"
+/>
+<Script id="onesignal-init" strategy="afterInteractive">
+  {`
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function (OneSignal) {
+      await OneSignal.init({
+        appId: "${process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '0f47a4cc-753c-49bc-869c-da583a236cfc'}",
+        safari_web_id: "web.onesignal.auto.6401d2fc-b951-4213-a02c-03159c046b78",
+        serviceWorkerPath: "/OneSignalSDKWorker.js",
+        serviceWorkerParam: { scope: "/" },
+        allowLocalhostAsSecureOrigin: true,
+        notifyButton: {
+          enable: true,
+          size: "medium",
+          position: "bottom-right",
+        },
+        promptOptions: {
+          slidedown: {
+            prompts: [
+              {
+                type: "push",
+                autoPrompt: true,
+                delay: { pageViews: 1, timeDelay: 3 },
+                text: {
+                  actionMessage: "नई खबरों की सूचनाएँ पाना चाहते हैं?",
+                  acceptButton: "Allow",
+                  cancelButton: "No thanks"
+                }
+              }
+            ]
+          }
+        }
+      });
+
+      // Force prompt if not decided yet
+      try {
+        const permission = OneSignal.Notifications.permissionNative;
+        if (permission === "default") {
+          await OneSignal.Slidedown.promptPush();
+        }
+      } catch (e) {
+        console.log("OneSignal prompt error", e);
+      }
+    });
+  `}
+</Script>
       </head>
 
       <body className="min-h-screen flex flex-col bg-brand-background pb-16 md:pb-0">
