@@ -33,34 +33,59 @@ async function getNewsData(rawSlug) {
   return allDummy.find((n) => n.slug === slug) || null
 }
 
+function absoluteImageUrl(raw) {
+  if (!raw) return 'https://www.akashvanispeaking.news/logo.png'
+  let u = String(raw).split(',')[0].trim()
+  // strip next/image wrapper if ever stored
+  if (u.includes('/_next/image')) {
+    try {
+      const q = new URL(u, 'https://www.akashvanispeaking.news')
+      const inner = q.searchParams.get('url')
+      if (inner) u = decodeURIComponent(inner)
+    } catch {}
+  }
+  if (u.startsWith('//')) u = 'https:' + u
+  if (u.startsWith('/')) u = 'https://www.akashvanispeaking.news' + u
+  // must be https for WA/FB
+  if (!u.startsWith('http')) u = 'https://www.akashvanispeaking.news/logo.png'
+  return u
+}
+
 export async function generateMetadata({ params }) {
   const news = await getNewsData(params.slug)
   if (!news) return { title: 'खबर नहीं मिली | Akashvani Speaking' }
 
-  const firstImage = news.featured_image
-    ? String(news.featured_image).split(',')[0].trim()
-    : ''
-  const imageUrl = firstImage || SITE_CONFIG.ogImage
+  const imageUrl = absoluteImageUrl(news.featured_image)
   const canonicalUrl = `https://www.akashvanispeaking.news/news/${params.slug}`
+  const desc = (news.subheadline || news.headline || '').slice(0, 200)
 
   return {
     title: `${news.headline} | Akashvani Speaking`,
-    description: news.subheadline || news.headline,
+    description: desc,
     facebook: { appId: '966242223397117' },
     alternates: { canonical: canonicalUrl },
     openGraph: {
       title: news.headline,
-      description: news.subheadline || news.headline,
+      description: desc,
       url: canonicalUrl,
-      siteName: SITE_CONFIG.name,
+      siteName: 'Akashvani Speaking',
       locale: 'hi_IN',
       type: 'article',
-      images: [{ url: imageUrl, width: 1200, height: 630, alt: news.headline }],
+      images: [
+        {
+          url: imageUrl,
+          secureUrl: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: news.headline,
+          type: 'image/jpeg',
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
       title: news.headline,
-      description: news.subheadline || news.headline,
+      description: desc,
       images: [imageUrl],
     },
   }
