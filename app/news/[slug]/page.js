@@ -8,6 +8,7 @@ import ShareButtons from '@/components/ShareButtons'
 import ScrollToTop from '@/components/ScrollToTop'
 import RelatedNews from '@/components/RelatedNews'
 import ImageSlider from '@/components/ImageSlider'
+import NewsBody, { NewsInline } from '@/components/NewsBody'
 import { SaveButton } from '@/components/TrendingNews'
 import { getNewsBySlug } from '@/lib/supabase'
 import {
@@ -45,12 +46,8 @@ export async function generateMetadata({ params }) {
   return {
     title: `${news.headline} | Akashvani Speaking`,
     description: news.subheadline || news.headline,
-    facebook: {
-      appId: '966242223397117',
-    },
-    alternates: {
-      canonical: canonicalUrl,
-    },
+    facebook: { appId: '966242223397117' },
+    alternates: { canonical: canonicalUrl },
     openGraph: {
       title: news.headline,
       description: news.subheadline || news.headline,
@@ -58,14 +55,7 @@ export async function generateMetadata({ params }) {
       siteName: SITE_CONFIG.name,
       locale: 'hi_IN',
       type: 'article',
-      images: [
-        {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: news.headline,
-        },
-      ],
+      images: [{ url: imageUrl, width: 1200, height: 630, alt: news.headline }],
     },
     twitter: {
       card: 'summary_large_image',
@@ -81,7 +71,7 @@ export default async function NewsDetailPage({ params }) {
   if (!news) return notFound()
 
   const fullText = news.points
-    ? news.points.join('। ').replace(/\[H\]/g, '')
+    ? news.points.join('\n\n').replace(/\[H\]/g, '')
     : news.subheadline || ''
 
   const shareUrl = `https://www.akashvanispeaking.news/news/${news.slug}`
@@ -94,6 +84,9 @@ export default async function NewsDetailPage({ params }) {
 
   const showLiveUpdates =
     (news.is_trending || news.is_breaking) && sortedLive.length > 0
+
+  // Normalize points: if someone pasted whole article as ONE point with \n
+  const rawPoints = Array.isArray(news.points) ? news.points : []
 
   return (
     <>
@@ -123,11 +116,15 @@ export default async function NewsDetailPage({ params }) {
             {news.headline}
           </h1>
 
-          {news.subheadline && (
-            <p className="text-sm md:text-base text-gray-700 font-yantramanav mb-4 leading-relaxed">
-              {news.subheadline}
-            </p>
-          )}
+          {/* Subheadline — keep line breaks + links */}
+          {news.subheadline ? (
+            <div className="mb-4">
+              <NewsBody
+                text={news.subheadline}
+                className="text-gray-700 [&_p]:text-sm md:[&_p]:text-base"
+              />
+            </div>
+          ) : null}
 
           <div className="mb-6">
             <TextToSpeech text={fullText} headline={news.headline} />
@@ -149,8 +146,8 @@ export default async function NewsDetailPage({ params }) {
                     <span className="bg-brand-primary text-white text-[10px] sm:text-xs font-poppins font-bold px-2.5 py-1.5 rounded shrink-0 min-w-[70px] text-center">
                       {update.time}
                     </span>
-                    <p className="text-sm sm:text-base font-yantramanav text-gray-800 leading-relaxed">
-                      {update.text}
+                    <p className="text-sm sm:text-base font-yantramanav text-gray-800 leading-relaxed whitespace-pre-wrap">
+                      <NewsInline text={update.text} />
                     </p>
                   </div>
                 ))}
@@ -158,23 +155,35 @@ export default async function NewsDetailPage({ params }) {
             </div>
           )}
 
-          <div className="space-y-4 mb-8">
-            {(news.points || []).map((point, idx) => {
-              if (String(point).startsWith('[H]')) {
+          {/* BODY: headings + paragraphs + bullets + links */}
+          <div className="space-y-5 mb-8">
+            {rawPoints.map((point, idx) => {
+              const raw = String(point || '')
+
+              // Custom heading
+              if (raw.startsWith('[H]')) {
                 return (
                   <h3
                     key={idx}
                     className="font-bold text-lg md:text-xl font-yantramanav text-brand-primary mt-8 border-b border-gray-100 pb-2"
                   >
-                    {String(point).replace('[H]', '').trim()}
+                    {raw.replace('[H]', '').trim()}
                   </h3>
                 )
               }
+
+              // Long multi-line block (article paragraphs pasted in one point)
+              // → render as paragraphs, NOT single glued line
+              if (raw.includes('\n') || raw.length > 220) {
+                return <NewsBody key={idx} text={raw} />
+              }
+
+              // Short line → bullet
               return (
-                <div key={idx} className="flex gap-3 items-start pl-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand-primary mt-2 shrink-0" />
+                <div key={idx} className="flex gap-3 items-start pl-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand-primary mt-2.5 shrink-0" />
                   <p className="text-base text-gray-800 font-yantramanav leading-relaxed">
-                    {point}
+                    <NewsInline text={raw} />
                   </p>
                 </div>
               )
