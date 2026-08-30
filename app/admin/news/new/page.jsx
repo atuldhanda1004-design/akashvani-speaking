@@ -7,6 +7,7 @@ import { Plus, X, Upload, Trash2, Send, Info, Newspaper, Zap, Video, Grid3X3 } f
 import AdminSidebar from '@/components/AdminSidebar'
 import { dummyCategories } from '@/lib/dummyData'
 import { createNews, uploadImage, getCategories, getCurrentUser, isSupabaseConfigured } from '@/lib/supabase'
+import { addWatermarkToImage } from '@/lib/watermark'
 
 function slugify(text) {
   return (
@@ -87,20 +88,25 @@ export default function AddNewsPage() {
   }))
 
   // Images
-  const handleImages = (e) => {
+    const handleImages = async (e) => {
     const files = Array.from(e.target.files || [])
     if (!files.length) return
-    const tooBig = files.find((f) => f.size > 5 * 1024 * 1024)
+
+    const tooBig = files.find((f) => f.size > 8 * 1024 * 1024)
     if (tooBig) {
-      alert('हर फोटो 5MB से छोटी होनी चाहिए')
+      alert('हर फोटो 8MB से छोटी होनी चाहिए')
       return
     }
-    setImageFiles((prev) => [...prev, ...files])
-    files.forEach((file) => {
+
+    // Auto-apply AS Watermark on Upload
+    for (const file of files) {
+      const watermarkedFile = await addWatermarkToImage(file)
+      setImageFiles((prev) => [...prev, watermarkedFile])
+
       const reader = new FileReader()
       reader.onload = (ev) => setImagePreviews((prev) => [...prev, ev.target.result])
-      reader.readAsDataURL(file)
-    })
+      reader.readAsDataURL(watermarkedFile)
+    }
   }
 
   const removeImage = (i) => {

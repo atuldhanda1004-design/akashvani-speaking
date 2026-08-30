@@ -32,29 +32,18 @@ async function getNewsData(rawSlug) {
   return allDummy.find((n) => n.slug === slug) || null
 }
 
+// 📸 100% GUARANTEED OPENGRAPH METADATA FOR FACEBOOK & WHATSAPP
 export async function generateMetadata({ params }) {
   const news = await getNewsData(params.slug)
   if (!news) return { title: 'खबर नहीं मिली | Akashvani Speaking' }
 
-  const firstImage = news.featured_image
+  // Extract clean direct Supabase Storage Image URL
+  const rawImg = news.featured_image
     ? String(news.featured_image).split(',')[0].trim()
     : ''
-  const timeStr = `${formatDate(news.published_at)}, ${formatTime(news.published_at)}`
-  const reporterName = news.users?.full_name || ''
-  const userRole = news.users?.role || 'reporter'
-  const locationName = news.location || news.categories?.name || ''
-
-  // Clean Canonical URL with www.
+  
+  const imageUrl = rawImg || SITE_CONFIG.ogImage
   const canonicalUrl = `https://www.akashvanispeaking.news/news/${params.slug}`
-
-  // Dynamic Image Generator URL
-  const ogImageUrl = `https://www.akashvanispeaking.news/api/og?title=${encodeURIComponent(
-    news.headline || ''
-  )}&img=${encodeURIComponent(firstImage)}&location=${encodeURIComponent(
-    locationName
-  )}&date=${encodeURIComponent(timeStr)}&reporter=${encodeURIComponent(
-    reporterName
-  )}&role=${encodeURIComponent(userRole)}`
 
   return {
     title: `${news.headline} | Akashvani Speaking`,
@@ -71,11 +60,10 @@ export async function generateMetadata({ params }) {
       type: 'article',
       images: [
         {
-          url: ogImageUrl,
+          url: imageUrl,
           width: 1200,
           height: 630,
           alt: news.headline,
-          type: 'image/png',
         },
       ],
     },
@@ -83,7 +71,7 @@ export async function generateMetadata({ params }) {
       card: 'summary_large_image',
       title: news.headline,
       description: news.subheadline || news.headline,
-      images: [ogImageUrl],
+      images: [imageUrl],
     },
   }
 }
