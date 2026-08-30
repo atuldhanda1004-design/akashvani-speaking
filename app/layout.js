@@ -14,6 +14,17 @@ export const metadata = {
   authors: [{ name: SITE_CONFIG.name }],
   creator: SITE_CONFIG.developer?.name,
   publisher: SITE_CONFIG.name,
+  alternates: {
+    canonical: SITE_CONFIG.url,
+    types: { 'application/rss+xml': `${SITE_CONFIG.url}/rss.xml` },
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '',
+  },
+  other: {
+    'fb:app_id': '966242223397117', // Fixes missing fb:app_id property in FB Debugger
+    'google-adsense-account': process.env.NEXT_PUBLIC_ADSENSE_ID || '',
+  },
   openGraph: {
     title: `${SITE_CONFIG.name} | ${SITE_CONFIG.tagline}`,
     description: SITE_CONFIG.description,

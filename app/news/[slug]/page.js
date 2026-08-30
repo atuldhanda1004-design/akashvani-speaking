@@ -44,8 +44,11 @@ export async function generateMetadata({ params }) {
   const userRole = news.users?.role || 'reporter'
   const locationName = news.location || news.categories?.name || ''
 
-  // Full dynamic image URL with Watermark, Location, Date, Reporter & Role
-  const ogImageUrl = `${SITE_CONFIG.url}/api/og?title=${encodeURIComponent(
+  // Clean Canonical URL with www.
+  const canonicalUrl = `https://www.akashvanispeaking.news/news/${params.slug}`
+
+  // Dynamic Image Generator URL
+  const ogImageUrl = `https://www.akashvanispeaking.news/api/og?title=${encodeURIComponent(
     news.headline || ''
   )}&img=${encodeURIComponent(firstImage)}&location=${encodeURIComponent(
     locationName
@@ -53,18 +56,16 @@ export async function generateMetadata({ params }) {
     reporterName
   )}&role=${encodeURIComponent(userRole)}`
 
-  const sharePageUrl = `${SITE_CONFIG.url}/news/${params.slug}`
-
   return {
     title: `${news.headline} | Akashvani Speaking`,
     description: news.subheadline || news.headline,
     alternates: {
-      canonical: sharePageUrl,
+      canonical: canonicalUrl,
     },
     openGraph: {
       title: news.headline,
       description: news.subheadline || news.headline,
-      url: sharePageUrl,
+      url: canonicalUrl,
       siteName: SITE_CONFIG.name,
       locale: 'hi_IN',
       type: 'article',
@@ -74,6 +75,7 @@ export async function generateMetadata({ params }) {
           width: 1200,
           height: 630,
           alt: news.headline,
+          type: 'image/png',
         },
       ],
     },
@@ -94,7 +96,7 @@ export default async function NewsDetailPage({ params }) {
     ? news.points.join('। ').replace(/\[H\]/g, '')
     : news.subheadline || ''
 
-  const shareUrl = `${SITE_CONFIG.url}/news/${news.slug}`
+  const shareUrl = `https://www.akashvanispeaking.news/news/${news.slug}`
   const timeStr = `${formatDate(news.published_at)}, ${formatTime(news.published_at)}`
 
   const sortedLive = [...(news.live_updates || [])].sort((a, b) => {
@@ -143,6 +145,7 @@ export default async function NewsDetailPage({ params }) {
             <TextToSpeech text={fullText} headline={news.headline} />
           </div>
 
+          {/* LIVE UPDATES */}
           {showLiveUpdates && (
             <div className="relative border-2 border-brand-red rounded-xl p-4 mb-8 mt-2 bg-red-50/40">
               <div className="absolute -top-3 left-4 bg-brand-red text-white text-xs font-bold px-3 py-1 rounded font-yantramanav">
@@ -168,6 +171,7 @@ export default async function NewsDetailPage({ params }) {
             </div>
           )}
 
+          {/* POINTS & HEADINGS */}
           <div className="space-y-4 mb-8">
             {(news.points || []).map((point, idx) => {
               if (String(point).startsWith('[H]')) {
@@ -191,6 +195,7 @@ export default async function NewsDetailPage({ params }) {
             })}
           </div>
 
+          {/* VIDEO NEWS */}
           {news.video_url && (
             <div className="mb-8">
               <h2 className="text-xl font-bold font-yantramanav text-gray-900 mb-4 flex items-center gap-2">
@@ -210,6 +215,7 @@ export default async function NewsDetailPage({ params }) {
             </div>
           )}
 
+          {/* SHARE & SAVE */}
           <div className="bg-gray-50 p-4 rounded-xl mb-4 border border-gray-100 flex items-center justify-between mt-8">
             <span className="text-sm font-bold text-gray-700 font-yantramanav">
               शेयर करें:
@@ -228,6 +234,7 @@ export default async function NewsDetailPage({ params }) {
           </Link>
         </div>
 
+        {/* RELATED NEWS */}
         <div className="bg-brand-background p-4 md:p-8 border-t border-gray-200">
           <h2 className="text-lg font-bold font-poppins text-brand-secondary mb-4">
             संबंधित खबरें (Related)
