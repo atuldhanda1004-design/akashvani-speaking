@@ -3,9 +3,10 @@ import Script from 'next/script'
 import { SITE_CONFIG } from '@/lib/constants'
 import BottomNav from '@/components/BottomNav'
 import NotificationBell from '@/components/NotificationBell'
+import WelcomePopup from '@/components/WelcomePopup'
 
 export const metadata = {
-  metadataBase: new URL(SITE_CONFIG.url),
+  metadataBase: new URL(SITE_CONFIG.url || 'https://www.akashvanispeaking.news'),
   title: {
     default: `${SITE_CONFIG.name} | ${SITE_CONFIG.tagline}`,
     template: `%s | ${SITE_CONFIG.name}`,
@@ -15,13 +16,11 @@ export const metadata = {
   authors: [{ name: SITE_CONFIG.name }],
   creator: SITE_CONFIG.developer?.name,
   publisher: SITE_CONFIG.name,
-  // 🟢 Next.js Native Facebook App ID (Renders <meta property="fb:app_id" content="..." />)
   facebook: {
     appId: '966242223397117',
   },
   alternates: {
     canonical: SITE_CONFIG.url,
-    types: { 'application/rss+xml': `${SITE_CONFIG.url}/rss.xml` },
   },
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '',
@@ -36,16 +35,32 @@ export const metadata = {
     siteName: SITE_CONFIG.name,
     locale: 'hi_IN',
     type: 'website',
-    images: [{ url: SITE_CONFIG.ogImage || '/logo.png', width: 1200, height: 630 }],
+    images: [
+      {
+        url: `${SITE_CONFIG.url}/logo.png`,
+        width: 512,
+        height: 512,
+        alt: SITE_CONFIG.name,
+      },
+    ],
   },
   twitter: {
-    card: 'summary_large_image',
+    card: 'summary',
     title: SITE_CONFIG.name,
     description: SITE_CONFIG.description,
-    images: [SITE_CONFIG.ogImage],
+    images: [`${SITE_CONFIG.url}/logo.png`],
   },
   robots: { index: true, follow: true },
-  icons: { icon: '/favicon.ico', apple: '/logo.png' },
+  // IMPORTANT: your logo, not Vercel default
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/logo.png', type: 'image/png', sizes: '32x32' },
+      { url: '/logo.png', type: 'image/png', sizes: '192x192' },
+    ],
+    apple: [{ url: '/logo.png', sizes: '180x180', type: 'image/png' }],
+    shortcut: '/favicon.ico',
+  },
   manifest: '/manifest.json',
 }
 
@@ -57,14 +72,19 @@ export const viewport = {
 }
 
 export default function RootLayout({ children }) {
-  const oneSignalAppId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '0f47a4cc-753c-49bc-869c-da583a236cfc'
+  const oneSignalAppId =
+    process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '0f47a4cc-753c-49bc-869c-da583a236cfc'
   const safariWebId = 'web.onesignal.auto.6401d2fc-b951-4213-a02c-03159c046b78'
   const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_ID || ''
 
   return (
     <html lang="hi">
       <head>
-        {/* Google AdSense */}
+        {/* Explicit icons (extra safety against Vercel default) */}
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/logo.png" />
+
         {adsenseId ? (
           <Script
             async
@@ -74,23 +94,28 @@ export default function RootLayout({ children }) {
           />
         ) : null}
 
-        {/* OneSignal Web Push SDK */}
         <Script
           src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
           strategy="afterInteractive"
-          defer
         />
         <Script id="onesignal-init" strategy="afterInteractive">
           {`
             window.OneSignalDeferred = window.OneSignalDeferred || [];
-            OneSignalDeferred.push(async function(OneSignal) {
+            OneSignalDeferred.push(async function (OneSignal) {
               await OneSignal.init({
                 appId: "${oneSignalAppId}",
                 safari_web_id: "${safariWebId}",
                 serviceWorkerPath: "/OneSignalSDKWorker.js",
+                serviceWorkerParam: { scope: "/" },
                 allowLocalhostAsSecureOrigin: true,
-                notifyButton: {
-                  enable: false
+                notifyButton: { enable: false },
+                promptOptions: {
+                  slidedown: {
+                    prompts: [{
+                      type: "push",
+                      autoPrompt: false
+                    }]
+                  }
                 }
               });
             });
@@ -100,6 +125,7 @@ export default function RootLayout({ children }) {
 
       <body className="min-h-screen flex flex-col bg-brand-background pb-16 md:pb-0">
         {children}
+        <WelcomePopup />
         <NotificationBell />
         <BottomNav />
       </body>
