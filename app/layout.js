@@ -23,6 +23,7 @@ export const metadata = {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '',
   },
   other: {
+    // Note: 'fb:app_id' is intentionally removed from here so Next.js doesn't force name="" attribute
     'google-adsense-account': process.env.NEXT_PUBLIC_ADSENSE_ID || '',
   },
   openGraph: {
@@ -60,7 +61,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="hi">
       <head>
-        {/* Facebook App ID (Fixed using property attribute for FB Scraper) */}
+        {/* Facebook App ID (Using property="" attribute required by Facebook Debugger) */}
         <meta property="fb:app_id" content="966242223397117" />
 
         {/* Google AdSense */}
@@ -77,48 +78,21 @@ export default function RootLayout({ children }) {
         <Script
           src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
           strategy="afterInteractive"
+          defer
         />
         <Script id="onesignal-init" strategy="afterInteractive">
           {`
             window.OneSignalDeferred = window.OneSignalDeferred || [];
-            OneSignalDeferred.push(async function (OneSignal) {
+            OneSignalDeferred.push(async function(OneSignal) {
               await OneSignal.init({
                 appId: "${oneSignalAppId}",
                 safari_web_id: "${safariWebId}",
                 serviceWorkerPath: "/OneSignalSDKWorker.js",
-                serviceWorkerParam: { scope: "/" },
                 allowLocalhostAsSecureOrigin: true,
                 notifyButton: {
-                  enable: true,
-                  size: "medium",
-                  position: "bottom-right",
-                },
-                promptOptions: {
-                  slidedown: {
-                    prompts: [
-                      {
-                        type: "push",
-                        autoPrompt: true,
-                        delay: { pageViews: 1, timeDelay: 3 },
-                        text: {
-                          actionMessage: "नई खबरों की सूचनाएँ पाना चाहते हैं?",
-                          acceptButton: "Allow",
-                          cancelButton: "No thanks"
-                        }
-                      }
-                    ]
-                  }
+                  enable: false
                 }
               });
-
-              try {
-                const permission = OneSignal.Notifications.permissionNative;
-                if (permission === "default") {
-                  await OneSignal.Slidedown.promptPush();
-                }
-              } catch (e) {
-                console.log("OneSignal prompt error", e);
-              }
             });
           `}
         </Script>
